@@ -1,57 +1,33 @@
 ﻿<!doctype html>
-
 <html>
 <head>
     <meta charset="utf-8">
-    <script src="vue.js"></script>
     <link rel="stylesheet" href="styles.css" />
 </head>
-
 <body>
-    <div id="app" v-if="directoryInfo">
-        <h3>Contents of {{ directoryInfo.name }}:</h3>
-        <ul class="entries">
-            <li v-if="!directoryInfo.isRoot">
-                <a href v-on:click="navigateTo('..', $event)">..</a>
-            </li>
-            <li v-for="item in directoryInfo.directories">
-                <a href v-on:click="navigateTo(item.name, $event)">{{ item.name }}</a>
-            </li>
-            <li v-for="item in directoryInfo.files">
-                <span>{{ item.name }} <em>({{ item.size }} bytes)</em></span>
-            </li>
-        </ul>
+    <div id="app">
+        <div class="sidebar" v-if="directoryInfo">
+            <ul class="entries">
+                <li v-if="!directoryInfo.isRoot">
+                    <a href v-on:click="navigateTo('..', $event)">..</a>
+                </li>
+                <li v-for="item in directoryInfo.directories">
+                    <a href v-on:click="navigateTo(item.name, $event)">{{ item.name }}</a>
+                </li>
+                <li v-for="item in directoryInfo.files">
+                    <a href v-on:click="showFile(item.fullName, $event)">{{ item.name }}</a>
+                </li>
+            </ul>
+        </div>
+        <div class="viewer">
+            <div v-if="fileInfo">
+                <h3>{{ fileInfo.name }} ({{ fileInfo.size }} bytes)</h3>
+                <div class="file-contents">{{ fileInfo.text }}</div>
+            </div>
+        </div>
     </div>
 
-    <script>
-        var app = new Vue({
-            el: '#app',
-            data: {
-                directoryInfo: null
-            },
-            methods: {
-                navigateTo: function(relativePath, event) {
-                    event.preventDefault();
-                    window.external.sendMessage(JSON.stringify({
-                        command: 'navigateTo',
-                        basePath: app.directoryInfo.name,
-                        relativePath: relativePath,
-                    }));
-                }
-            }
-        });
-
-        window.external.receiveMessage(function (messageJson) {
-            var message = JSON.parse(messageJson);
-            switch (message.command) {
-                case 'show':
-                    app.directoryInfo = message.arg;
-                    break;
-            }
-        });
-
-        window.external.sendMessage(JSON.stringify({ command: 'ready' }));
-    </script>
+    <script src="vue.js"></script>
+    <script src="app.js"></script>
 </body>
-
 </html>
