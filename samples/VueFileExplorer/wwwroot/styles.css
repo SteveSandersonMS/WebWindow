@@ -1,0 +1,25 @@
+﻿body
+{
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.entries {
+    padding: 0;
+}
+
+.entries a, .entries span {
+    display: block;
+    background-color: #eee;
+    margin-top: 0.4rem;
+    padding: 0.3rem 1rem;
+    border-radius: 2px;
+}
+
+    .entries a:hover {
+        background-color: #448844;
+        color: white;
+    }
+
+    .entries em {
+        float: right;
+    }

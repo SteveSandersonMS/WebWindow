@@ -4,12 +4,13 @@
 <head>
     <meta charset="utf-8">
     <script src="vue.js"></script>
+    <link rel="stylesheet" href="styles.css" />
 </head>
 
 <body>
     <div id="app" v-if="directoryInfo">
         <h3>Contents of {{ directoryInfo.name }}:</h3>
-        <ul>
+        <ul class="entries">
             <li v-if="!directoryInfo.isRoot">
                 <a href v-on:click="navigateTo('..', $event)">..</a>
             </li>
@@ -17,7 +18,7 @@
                 <a href v-on:click="navigateTo(item.name, $event)">{{ item.name }}</a>
             </li>
             <li v-for="item in directoryInfo.files">
-                {{ item.name }} <em>({{ item.size }} bytes)</em>
+                <span>{{ item.name }} <em>({{ item.size }} bytes)</em></span>
             </li>
         </ul>
     </div>
