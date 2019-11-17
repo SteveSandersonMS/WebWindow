@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
+    <TypeScriptToolsVersion>Latest</TypeScriptToolsVersion>
+    <DefaultItemExcludes>${DefaultItemExcludes};node_modules\**</DefaultItemExcludes>
+    <IsPackable>false</IsPackable>
+    
+    <!-- VS's FastUpToDateCheck doesn't consider .ts file changes, so it's necessary to disable it to get incremental builds to work correctly (albeit not as fast as if FastUpToDateCheck did work for them) -->
+    <DisableFastUpToDateCheck>true</DisableFastUpToDateCheck>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <WebpackInputs Include="**\*.ts" Exclude="node_modules\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="dist\" />
+  </ItemGroup>
+
+  <Target Name="EnsureNpmRestored" Condition="!Exists('node_modules')">
+    <Message Importance="high" Text="Restoring dependencies using 'npm'. This may take several minutes..." />
+    <Exec Command="npm install" />
+  </Target>
+
+  <Target Name="RunWebpack" AfterTargets="ResolveReferences" Inputs="@(WebpackInputs)" Outputs="dist\blazor.desktop.js" DependsOnTargets="EnsureNpmRestored">
+    <Exec Command="npm run build:debug" Condition="'$(Configuration)' == 'Debug'" />
+    <Exec Command="npm run build:production" Condition="'$(Configuration)' != 'Debug'" />
+  </Target>
+</Project>

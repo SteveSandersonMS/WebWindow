@@ -1,0 +1,23 @@
+﻿<html>
+<body>
+    <h1>Hello</h1>
+    <p>This is a local file</p>
+    <img src="image.png" />
+
+    <p>
+        <button onclick="callDotNet()">Call .NET</button>
+    </p>
+
+    <script src="app://something.js"></script>
+
+    <script>
+        function callDotNet() {
+            window.external.sendMessage('blah😋');
+        }
+
+        window.external.receiveMessage(function (message) {
+            alert(message);
+        });
+    </script>
+</body>
+</html>

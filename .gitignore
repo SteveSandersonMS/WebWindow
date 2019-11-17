@@ -1,0 +1,7 @@
+.vs/
+bin/
+obj/
+*.user
+Debug/
+packages/
+artifacts/

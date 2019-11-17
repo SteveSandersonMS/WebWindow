@@ -1,0 +1,22 @@
+{
+  "name": "components.desktop.client",
+  "private": true,
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build:debug": "webpack --mode development",
+    "build:production": "webpack --mode production",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "@dotnet/jsinterop": "3.0.0-preview9.19423.4",
+    "@types/base64-arraybuffer": "^0.1.0",
+    "base64-arraybuffer": "^0.1.5",
+    "ts-loader": "^4.4.1",
+    "tsconfig-paths-webpack-plugin": "^3.2.0",
+    "typescript": "^3.5.3",
+    "webpack": "^4.36.1",
+    "webpack-cli": "^3.3.6"
+  }
+}

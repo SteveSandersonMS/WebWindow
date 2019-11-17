@@ -1,0 +1,39 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <NativeOutputDir>..\WebWindow.Native\x64\Debug\</NativeOutputDir>
+    <IsMacOS>$([MSBuild]::IsOsPlatform('OSX'))</IsMacOS>
+    <NativeAssetRuntimeIdentifier Condition="'$(OS)' == 'Windows_NT'" >win-x64</NativeAssetRuntimeIdentifier>
+    <NativeAssetRuntimeIdentifier Condition="'$(OS)' != 'Windows_NT' AND '$(IsMacOS)' != 'true'" >linux-x64</NativeAssetRuntimeIdentifier>
+    <NativeAssetRuntimeIdentifier Condition="'$(OS)' != 'Windows_NT' AND '$(IsMacOS)' == 'true'" >osx-x64</NativeAssetRuntimeIdentifier>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(OS)' == 'Windows_NT' AND '$(Configuration)' == 'Debug'">
+    <ProjectReference Include="..\WebWindow.Native\WebWindow.Native.vcxproj" />
+  </ItemGroup>
+
+  <Target Name="BuildNonWindowsNative" Condition=" '$(OS)' != 'Windows_NT' AND '$(Configuration)' == 'Debug'" BeforeTargets="Build">
+    <MakeDir Directories="..\WebWindow.Native\x64\Debug" />
+    <Exec Condition="'$(IsMacOS)' == 'true'"
+          WorkingDirectory="..\WebWindow.Native"
+          Command="gcc -shared -lstdc++ -DOS_MAC -framework Cocoa -framework WebKit WebWindow.Mac.mm Exports.cpp WebWindow.Mac.AppDelegate.m WebWindow.Mac.UiDelegate.m WebWindow.Mac.UrlSchemeHandler.m -o x64/Debug/WebWindow.Native.dylib" />
+    <Exec Condition="'$(IsMacOS)' != 'true'"
+          WorkingDirectory="..\WebWindow.Native"
+          Command="gcc -std=c++11 -shared -DOS_LINUX Exports.cpp WebWindow.Linux.cpp -o x64/Debug/WebWindow.Native.so `pkg-config --cflags --libs gtk+-3.0 webkit2gtk-4.0` -fPIC" />
+  </Target>
+
+  <ItemGroup>
+    <_NativeLibraries Include="$(NativeOutputDir)WebWindow.Native.dll" Condition="Exists('$(NativeOutputDir)WebWindow.Native.dll')" />
+    <_NativeLibraries Include="$(NativeOutputDir)WebView2Loader.dll" Condition="Exists('$(NativeOutputDir)WebView2Loader.dll')" />
+    <_NativeLibraries Include="$(NativeOutputDir)WebWindow.Native.so" Condition="Exists('$(NativeOutputDir)WebWindow.Native.so')" />
+    <_NativeLibraries Include="$(NativeOutputDir)WebWindow.Native.dylib" Condition="Exists('$(NativeOutputDir)WebWindow.Native.dylib')" />
+    <Content Include="@(_NativeLibraries)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>%(Filename)%(Extension)</Link>
+      <Pack>true</Pack>
+      <PackagePath>runtimes/$(NativeAssetRuntimeIdentifier)/native/%(Filename)%(Extension)</PackagePath>
+    </Content>
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,56 @@
+﻿<!doctype html>
+
+<html>
+<head>
+    <meta charset="utf-8">
+    <script src="vue.js"></script>
+</head>
+
+<body>
+    <div id="app" v-if="directoryInfo">
+        <h3>Contents of {{ directoryInfo.name }}:</h3>
+        <ul>
+            <li v-if="!directoryInfo.isRoot">
+                <a href v-on:click="navigateTo('..', $event)">..</a>
+            </li>
+            <li v-for="item in directoryInfo.directories">
+                <a href v-on:click="navigateTo(item.name, $event)">{{ item.name }}</a>
+            </li>
+            <li v-for="item in directoryInfo.files">
+                {{ item.name }} <em>({{ item.size }} bytes)</em>
+            </li>
+        </ul>
+    </div>
+
+    <script>
+        var app = new Vue({
+            el: '#app',
+            data: {
+                directoryInfo: null
+            },
+            methods: {
+                navigateTo: function(relativePath, event) {
+                    event.preventDefault();
+                    window.external.sendMessage(JSON.stringify({
+                        command: 'navigateTo',
+                        basePath: app.directoryInfo.name,
+                        relativePath: relativePath,
+                    }));
+                }
+            }
+        });
+
+        window.external.receiveMessage(function (messageJson) {
+            var message = JSON.parse(messageJson);
+            switch (message.command) {
+                case 'show':
+                    app.directoryInfo = message.arg;
+                    break;
+            }
+        });
+
+        window.external.sendMessage(JSON.stringify({ command: 'ready' }));
+    </script>
+</body>
+
+</html>
