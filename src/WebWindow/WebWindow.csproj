@@ -1,6 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <Title>WebWindow</Title>
+    <PackageDescription>Open native OS windows hosting web UI on Windows, Mac, and Linux</PackageDescription>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <TargetFramework>netstandard2.1</TargetFramework>
     <NativeOutputDir>..\WebWindow.Native\x64\Debug\</NativeOutputDir>
     <IsMacOS>$([MSBuild]::IsOsPlatform('OSX'))</IsMacOS>
