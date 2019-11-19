@@ -19,7 +19,7 @@ If you want to build the `WebWindow` library itself, you will need:
  * Windows, Mac, or Linux
  * Node.js (because `WebWindow.Blazor.JS` includes TypeScript code, so the build process involves calling Node to perform a Webpack build)
  * If you're on Windows:
-   * Use Visual Studio with C++ support enabled. You *must* build in Debug/x64 configuration (*not* AnyCPU, which is the default).
+   * Use Visual Studio with C++ support enabled. You *must* build in x64 configuration (*not* AnyCPU, which is the default).
    * If things don't seem to be updating, try right-clicking one of the `testassets` projects and choose *Rebuild* to force it to rebuild the native assets.
  * If you're on macOS:
    * Install Xcode so that you have the whole `gcc` toolchain available on the command line.

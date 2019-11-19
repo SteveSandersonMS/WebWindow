@@ -3,7 +3,7 @@ typedef char* UTF8String;
 
 #ifdef _WIN32
 #include <Windows.h>
-#include <wrl.h>
+#include <wrl\event.h>
 #include <map>
 #include <string>
 #include <wil/com.h>

@@ -3,5 +3,6 @@ bin/
 obj/
 *.user
 Debug/
+Release/
 packages/
 artifacts/
