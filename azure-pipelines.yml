@@ -54,7 +54,7 @@ jobs:
       inputs:
         solution: 'WebWindow.Native.sln'
         platform: 'x64'
-        configuration: 'Debug'
+        configuration: '$(buildConfiguration)'
     - task: CmdLine@2
       displayName: 'Build Linux/macOS native assets'
       condition: ne(variables.rid, 'windows-x64')
