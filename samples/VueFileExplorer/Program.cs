@@ -29,7 +29,7 @@ namespace VueFileExplorer
                 case "navigateTo":
                     var basePath = parsedMessage.GetProperty("basePath").GetString();
                     var relativePath = parsedMessage.GetProperty("relativePath").GetString();
-                    var destinationPath = Path.GetFullPath(Path.Combine(basePath, relativePath));
+                    var destinationPath = Path.GetFullPath(Path.Combine(basePath, relativePath)).TrimEnd(Path.DirectorySeparatorChar);
                     ShowDirectoryInfo(window, destinationPath);
                     break;
                 case "showFile":
@@ -41,7 +41,7 @@ namespace VueFileExplorer
 
         static void ShowDirectoryInfo(WebWindow window, string path)
         {
-            window.Title = path;
+            window.Title = Path.GetFileName(path);
 
             var directoryInfo = new DirectoryInfo(path);
             SendCommand(window, "showDirectory", new

@@ -63,7 +63,7 @@ namespace WebWindows
             var options = new WebWindowOptions();
             configure.Invoke(options);
 
-            _title = title;
+            WriteTitleField(title);
 
             var onWebMessageReceivedDelegate = (OnWebMessageReceivedCallback)ReceiveWebMessage;
             _gcHandlesToFree.Add(GCHandle.Alloc(onWebMessageReceivedDelegate));
@@ -100,7 +100,7 @@ namespace WebWindows
             get => _title;
             set
             {
-                _title = value;
+                WriteTitleField(value);
                 WebWindow_SetTitle(_nativeWebWindow, _title);
             }
         }
@@ -155,6 +155,22 @@ namespace WebWindows
         }
 
         public event EventHandler<string> OnWebMessageReceived;
+
+        private void WriteTitleField(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                value = "Untitled window";
+            }
+
+            // Due to Linux/Gtk platform limitations, the window title has to be no more than 31 chars
+            if (value.Length > 31 && RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                value = value.Substring(0, 31);
+            }
+
+            _title = value;
+        }
 
         private void ReceiveWebMessage([MarshalAs(UnmanagedType.LPUTF8Str)] string message)
         {
