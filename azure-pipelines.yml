@@ -59,12 +59,12 @@ jobs:
       displayName: 'Build Linux/macOS native assets'
       condition: ne(variables.rid, 'windows-x64')
       inputs:
-        script: 'dotnet build src/WebWindow/WebWindow.csproj /t:BuildNonWindowsNative'
+        script: 'dotnet build -c $(buildConfiguration) src/WebWindow/WebWindow.csproj /t:BuildNonWindowsNative'
     - task: CmdLine@2
       condition: eq(variables.rid, 'windows-x64')
       displayName: 'Build .js artifact for WebWindow.Blazor.JS'
       inputs:
-        script: 'dotnet build src/WebWindow.Blazor.JS'
+        script: 'dotnet build -c $(buildConfiguration) src/WebWindow.Blazor.JS'
     - task: CmdLine@2
       displayName: 'dotnet pack WebWindow'
       inputs:

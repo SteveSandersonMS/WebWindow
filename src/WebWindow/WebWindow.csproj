@@ -16,14 +16,14 @@
     <ProjectReference Include="..\WebWindow.Native\WebWindow.Native.vcxproj" />
   </ItemGroup>
 
-  <Target Name="BuildNonWindowsNative" Condition=" '$(OS)' != 'Windows_NT' AND '$(Configuration)' == 'Debug'" BeforeTargets="Build">
-    <MakeDir Directories="..\WebWindow.Native\x64\Debug" />
+  <Target Name="BuildNonWindowsNative" Condition="'$(OS)' != 'Windows_NT'" BeforeTargets="Build">
+    <MakeDir Directories="..\WebWindow.Native\x64\$(Configuration)" />
     <Exec Condition="'$(IsMacOS)' == 'true'"
           WorkingDirectory="..\WebWindow.Native"
-          Command="gcc -shared -lstdc++ -DOS_MAC -framework Cocoa -framework WebKit WebWindow.Mac.mm Exports.cpp WebWindow.Mac.AppDelegate.m WebWindow.Mac.UiDelegate.m WebWindow.Mac.UrlSchemeHandler.m -o x64/Debug/WebWindow.Native.dylib" />
+          Command="gcc -shared -lstdc++ -DOS_MAC -framework Cocoa -framework WebKit WebWindow.Mac.mm Exports.cpp WebWindow.Mac.AppDelegate.m WebWindow.Mac.UiDelegate.m WebWindow.Mac.UrlSchemeHandler.m -o x64/$(Configuration)/WebWindow.Native.dylib" />
     <Exec Condition="'$(IsMacOS)' != 'true'"
           WorkingDirectory="..\WebWindow.Native"
-          Command="gcc -std=c++11 -shared -DOS_LINUX Exports.cpp WebWindow.Linux.cpp -o x64/Debug/WebWindow.Native.so `pkg-config --cflags --libs gtk+-3.0 webkit2gtk-4.0` -fPIC" />
+          Command="gcc -std=c++11 -shared -DOS_LINUX Exports.cpp WebWindow.Linux.cpp -o x64/$(Configuration)/WebWindow.Native.so `pkg-config --cflags --libs gtk+-3.0 webkit2gtk-4.0` -fPIC" />
   </Target>
 
   <ItemGroup>
