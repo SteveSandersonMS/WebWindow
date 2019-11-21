@@ -7,7 +7,14 @@
 #include <map>
 #include <string>
 #include <wil/com.h>
-#include <WebView2.h>
+#include <windows.web.ui.h>
+#include <windows.web.ui.interop.h>
+#include <wrl.h>
+#include <wrl/wrappers/corewrappers.h>
+#include "WebView2.h"
+typedef void(__stdcall* ACTION)();
+typedef void(__stdcall* WebMessageReceivedCallback)(UTF8String message);
+typedef void* (__stdcall *WebResourceRequestedCallback) (UTF8String url, int* outNumBytes, UTF8String *outContentType);
 typedef const wchar_t* AutoString;
 #else
 #ifdef OS_LINUX
@@ -45,6 +52,10 @@ private:
 	wil::com_ptr<IWebView2Environment3> _webviewEnvironment;
 	wil::com_ptr<IWebView2WebView5> _webviewWindow;
 	std::map<std::wstring, WebResourceRequestedCallback> _schemeToRequestHandler;
+
+	Microsoft::WRL::ComPtr<ABI::Windows::Web::UI::IWebViewControl> m_webViewControl;
+	Microsoft::WRL::ComPtr<ABI::Windows::Web::UI::Interop::IWebViewControlProcess> m_process;
+	Microsoft::WRL::ComPtr<ABI::Windows::Web::UI::Interop::IWebViewControlProcessOptions> m_processOptions;
 	void AttachWebView();
 #elif OS_LINUX
 	GtkWidget* _window;

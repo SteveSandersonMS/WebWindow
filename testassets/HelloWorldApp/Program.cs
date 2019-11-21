@@ -7,6 +7,7 @@ namespace HelloWorldApp
 {
     class Program
     {
+        [STAThread]
         static void Main(string[] args)
         {
             var window = new WebWindow("My great app", options =>
@@ -24,6 +25,7 @@ namespace HelloWorldApp
             };
 
             window.NavigateToLocalFile("wwwroot/index.html");
+            //window.NavigateToUrl("https://bing.com");
             window.WaitForExit();
         }
     }
