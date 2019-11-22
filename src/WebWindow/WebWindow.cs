@@ -6,7 +6,7 @@ using System.Threading;
 
 namespace WebWindows
 {
-    public class WebWindow
+    public class WebWindow : IDisposable
     {
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate void OnWebMessageReceivedCallback([MarshalAs(UnmanagedType.LPUTF8Str)] string message);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate IntPtr OnWebResourceRequestedCallback([MarshalAs(UnmanagedType.LPUTF8Str)] string url, out int numBytes, [MarshalAs(UnmanagedType.LPUTF8Str)] out string contentType);
@@ -25,6 +25,7 @@ namespace WebWindows
         [DllImport(DllName)] static extern void WebWindow_ShowMessage(IntPtr instance, [MarshalAs(UnmanagedType.LPUTF8Str)] string title, [MarshalAs(UnmanagedType.LPUTF8Str)] string body, uint type);
         [DllImport(DllName)] static extern void WebWindow_SendMessage(IntPtr instance, [MarshalAs(UnmanagedType.LPUTF8Str)] string message);
         [DllImport(DllName)] static extern void WebWindow_AddCustomScheme(IntPtr instance, [MarshalAs(UnmanagedType.LPUTF8Str)] string scheme, IntPtr requestHandler);
+        [DllImport("user32.dll", CharSet = CharSet.Auto)] static extern IntPtr SendMessage(IntPtr hWnd, UInt32 Msg, IntPtr wParam, IntPtr lParam);
 
         private List<GCHandle> _gcHandlesToFree = new List<GCHandle>();
         private IntPtr _nativeWebWindow;
@@ -84,12 +85,7 @@ namespace WebWindows
 
         ~WebWindow()
         {
-            // TODO: IDisposable
-            foreach (var gcHandle in _gcHandlesToFree)
-            {
-                gcHandle.Free();
-            }
-            _gcHandlesToFree.Clear();
+            Dispose(false);
         }
 
         public void Show() => WebWindow_Show(_nativeWebWindow);
@@ -211,6 +207,32 @@ namespace WebWindows
 
             var callbackPtr = Marshal.GetFunctionPointerForDelegate(callback);
             WebWindow_AddCustomScheme(_nativeWebWindow, scheme, callbackPtr);
+        }
+
+        public void Close()
+        {
+            SendMessage(Hwnd, 0x0010, IntPtr.Zero, IntPtr.Zero);
+            Dispose();
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(Boolean itIsSafeToAlsoFreeManagedObjects)
+        {
+            foreach (var gcHandle in _gcHandlesToFree)
+            {
+                gcHandle.Free();
+            }
+            _nativeWebWindow = IntPtr.Zero;
+
+            if (itIsSafeToAlsoFreeManagedObjects)
+            {
+                _gcHandlesToFree.Clear();
+            }
         }
     }
 }
