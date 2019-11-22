@@ -60,5 +60,6 @@ public:
 	void NavigateToUrl(UTF8String url);
 	void NavigateToString(UTF8String content);
 	void SendMessage(UTF8String message);
+	void CloseWindow();
 	void AddCustomScheme(UTF8String scheme, WebResourceRequestedCallback requestHandler);
 };

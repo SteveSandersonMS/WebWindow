@@ -25,7 +25,7 @@ namespace WebWindows
         [DllImport(DllName)] static extern void WebWindow_ShowMessage(IntPtr instance, [MarshalAs(UnmanagedType.LPUTF8Str)] string title, [MarshalAs(UnmanagedType.LPUTF8Str)] string body, uint type);
         [DllImport(DllName)] static extern void WebWindow_SendMessage(IntPtr instance, [MarshalAs(UnmanagedType.LPUTF8Str)] string message);
         [DllImport(DllName)] static extern void WebWindow_AddCustomScheme(IntPtr instance, [MarshalAs(UnmanagedType.LPUTF8Str)] string scheme, IntPtr requestHandler);
-        [DllImport("user32.dll", CharSet = CharSet.Auto)] static extern IntPtr SendMessage(IntPtr hWnd, UInt32 Msg, IntPtr wParam, IntPtr lParam);
+        [DllImport(DllName)] static extern void WebWindow_CloseWindow(IntPtr instance);
 
         private List<GCHandle> _gcHandlesToFree = new List<GCHandle>();
         private IntPtr _nativeWebWindow;
@@ -211,7 +211,7 @@ namespace WebWindows
 
         public void Close()
         {
-            SendMessage(Hwnd, 0x0010, IntPtr.Zero, IntPtr.Zero);
+            WebWindow_CloseWindow(_nativeWebWindow);
             Dispose();
         }
 
