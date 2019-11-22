@@ -209,14 +209,9 @@ namespace WebWindows
             WebWindow_AddCustomScheme(_nativeWebWindow, scheme, callbackPtr);
         }
 
-        public void Close()
-        {
-            WebWindow_CloseWindow(_nativeWebWindow);
-            Dispose();
-        }
-
         public void Dispose()
         {
+            WebWindow_CloseWindow(_nativeWebWindow);
             Dispose(true);
             GC.SuppressFinalize(this);
         }
