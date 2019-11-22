@@ -300,7 +300,7 @@ void WebWindow::Invoke(ACTION callback)
 	waitInfo.completionNotifier.wait(uLock, [&] { return waitInfo.isCompleted; });
 }
 
-void WebWindow::AttachWebView()
+bool WebWindow::AttachWebViewChromium()
 {
 	std::atomic_flag flag = ATOMIC_FLAG_INIT;
 	flag.test_and_set();
@@ -390,58 +390,76 @@ void WebWindow::AttachWebView()
 
 	if (envResult != S_OK)
 	{
-		// winrt::init_apartment(winrt::apartment_type::single_threaded);
-		envResult = RoInitialize(RO_INIT_SINGLETHREADED);
-
-		// Use default options if options weren't set on the App during App::RunNewInstance
-		if (!m_processOptions)
-		{
-			m_processOptions = ActivateInstanceFailFast<IWebViewControlProcessOptions>(RuntimeClass_Windows_Web_UI_Interop_WebViewControlProcessOptions);
-		}
-
-		// Use a default new process if one wasn't set on the App during App::RunNewInstance
-		if (!m_process)
-		{
-			ComPtr<IWebViewControlProcessFactory> webViewControlProcessFactory = GetActivationFactoryFailFast<IWebViewControlProcessFactory>(RuntimeClass_Windows_Web_UI_Interop_WebViewControlProcess);
-			CheckFailure(webViewControlProcessFactory->CreateWithOptions(m_processOptions.Get(), &m_process));
-		}
-
-		ComPtr<IAsyncOperation<WebViewControl*>> createWebViewAsyncOperation;
-		CheckFailure(m_process->CreateWebViewControlAsync(
-			reinterpret_cast<INT64>(_hWnd),
-			HwndWindowRectToBoundsRect(_hWnd),
-			&createWebViewAsyncOperation));
-
-		CheckFailure(AsyncOpHelpers::WaitForCompletionAndGetResults(createWebViewAsyncOperation.Get(), m_webViewControl.ReleaseAndGetAddressOf()));
-
-		EventRegistrationToken token = { 0 };
-		HRESULT hr = m_webViewControl->add_ContentLoading(Callback<ITypedEventHandler<IWebViewControl*, WebViewControlContentLoadingEventArgs*>>(
-			[this](IWebViewControl* webViewControl, IWebViewControlContentLoadingEventArgs* args) -> HRESULT
-			{
-				ComPtr<IUriRuntimeClass> uri;
-				CheckFailure(args->get_Uri(&uri));
-				HString uriAsHString;
-				CheckFailure(uri->get_AbsoluteUri(uriAsHString.ReleaseAndGetAddressOf()));
-				//SetWindowText(m_addressbarWindow, uriAsHString.GetRawBuffer(nullptr));
-				return S_OK;
-			}).Get(), &token);
-		CheckFailure(hr);
-
-		//_com_error err(envResult);
-		//LPCTSTR errMsg = err.ErrorMessage();
-		//MessageBox(_hWnd, errMsg, L"Error instantiating webview", MB_OK);
+		return false;
 	}
-	else
+
+	// Block until it's ready. This simplifies things for the caller, so they
+	// don't need to regard this process as async.
+	MSG msg = { };
+	while (flag.test_and_set() && GetMessage(&msg, NULL, 0, 0))
 	{
-		// Block until it's ready. This simplifies things for the caller, so they
-		// don't need to regard this process as async.
-		MSG msg = { };
-		while (flag.test_and_set() && GetMessage(&msg, NULL, 0, 0))
-		{
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-		}
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
 	}
+
+	return true;
+}
+
+bool WebWindow::AttachWebViewEdge()
+{
+	// winrt::init_apartment(winrt::apartment_type::single_threaded);
+	HRESULT envResult = RoInitialize(RO_INIT_SINGLETHREADED);
+
+	// Use default options if options weren't set on the App during App::RunNewInstance
+	if (!m_processOptions)
+	{
+		m_processOptions = ActivateInstanceFailFast<IWebViewControlProcessOptions>(RuntimeClass_Windows_Web_UI_Interop_WebViewControlProcessOptions);
+	}
+
+	// Use a default new process if one wasn't set on the App during App::RunNewInstance
+	if (!m_process)
+	{
+		ComPtr<IWebViewControlProcessFactory> webViewControlProcessFactory = GetActivationFactoryFailFast<IWebViewControlProcessFactory>(RuntimeClass_Windows_Web_UI_Interop_WebViewControlProcess);
+		CheckFailure(webViewControlProcessFactory->CreateWithOptions(m_processOptions.Get(), &m_process));
+	}
+
+	ComPtr<IAsyncOperation<WebViewControl*>> createWebViewAsyncOperation;
+	CheckFailure(m_process->CreateWebViewControlAsync(
+		reinterpret_cast<INT64>(_hWnd),
+		HwndWindowRectToBoundsRect(_hWnd),
+		&createWebViewAsyncOperation));
+
+	CheckFailure(AsyncOpHelpers::WaitForCompletionAndGetResults(createWebViewAsyncOperation.Get(), m_webViewControl.ReleaseAndGetAddressOf()));
+
+	EventRegistrationToken token = { 0 };
+	HRESULT hr = m_webViewControl->add_ContentLoading(Callback<ITypedEventHandler<IWebViewControl*, WebViewControlContentLoadingEventArgs*>>(
+		[this](IWebViewControl* webViewControl, IWebViewControlContentLoadingEventArgs* args) -> HRESULT
+		{
+			ComPtr<IUriRuntimeClass> uri;
+			CheckFailure(args->get_Uri(&uri));
+			HString uriAsHString;
+			CheckFailure(uri->get_AbsoluteUri(uriAsHString.ReleaseAndGetAddressOf()));
+			//SetWindowText(m_addressbarWindow, uriAsHString.GetRawBuffer(nullptr));
+			return S_OK;
+		}).Get(), &token);
+	CheckFailure(hr);
+
+	//_com_error err(envResult);
+	//LPCTSTR errMsg = err.ErrorMessage();
+	//MessageBox(_hWnd, errMsg, L"Error instantiating webview", MB_OK);
+
+	return envResult == S_OK;
+}
+
+void WebWindow::AttachWebView()
+{
+	if (AttachWebViewChromium())
+	{
+		return;
+	}
+
+	// Fallback to Edge rendering.
+	AttachWebViewEdge();
 }
 
 void WebWindow::NavigateToUrl(AutoString url)
@@ -459,7 +477,6 @@ void WebWindow::NavigateToUrl(AutoString url)
 			CheckFailure(m_webViewControl->Navigate(uri.Get()));
 		}
 	}
-	delete[] urlW;
 }
 
 void WebWindow::NavigateToString(AutoString content)

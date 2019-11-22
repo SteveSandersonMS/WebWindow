@@ -12,9 +12,6 @@
 #include <wrl.h>
 #include <wrl/wrappers/corewrappers.h>
 #include "WebView2.h"
-typedef void(__stdcall* ACTION)();
-typedef void(__stdcall* WebMessageReceivedCallback)(UTF8String message);
-typedef void* (__stdcall *WebResourceRequestedCallback) (UTF8String url, int* outNumBytes, UTF8String *outContentType);
 typedef const wchar_t* AutoString;
 #else
 #ifdef OS_LINUX
@@ -57,6 +54,8 @@ private:
 	Microsoft::WRL::ComPtr<ABI::Windows::Web::UI::Interop::IWebViewControlProcess> m_process;
 	Microsoft::WRL::ComPtr<ABI::Windows::Web::UI::Interop::IWebViewControlProcessOptions> m_processOptions;
 	void AttachWebView();
+	bool AttachWebViewChromium();
+	bool AttachWebViewEdge();
 #elif OS_LINUX
 	GtkWidget* _window;
 	GtkWidget* _webview;
