@@ -10,7 +10,6 @@
 #include <iomanip>
 
 std::mutex invokeLockMutex;
-GtkWidget* _window;
 
 struct InvokeWaitInfo
 {
@@ -218,7 +217,7 @@ void WebWindow::AddCustomScheme(UTF8String scheme, WebResourceRequestedCallback 
 
 void WebWindow::CloseWindow()
 {
-	gtk_close_window(_window);
+	gtk_main_quit();
 }
 
 #endif
