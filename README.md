@@ -4,7 +4,7 @@ For information, see [this blog post](https://blog.stevensanderson.com/2019/11/1
 
 # Usage instructions
 
-You don't need to build this repo yourself, unless you want to change the `WebWindow` library itself. If you just want to use it in an app, grab the [prebuilt NuGet package](https://www.nuget.org/packages/WebWindow) or follow [these 'hello world' example steps](https://blog.stevensanderson.com/2019/11/18/2019-11-18-webwindow-a-cross-platform-webview-for-dotnet-core/).
+Unless you want to change the `WebWindow` library itself, you do not need to build this repo yourself. If you just want to use it in an app, grab the [prebuilt NuGet package](https://www.nuget.org/packages/WebWindow) or follow [these 'hello world' example steps](https://blog.stevensanderson.com/2019/11/18/2019-11-18-webwindow-a-cross-platform-webview-for-dotnet-core/).
 
 # Samples
 
