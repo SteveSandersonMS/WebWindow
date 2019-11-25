@@ -340,7 +340,15 @@ void WebWindow::SendMessage(UTF8String message)
 	delete[] messageW;
 }
 
+void WebWindow::CloseWindow()
+{
+	//SendMessage(_hWnd, 0x0010, 0, 0);
+	WindowProc(_hWnd, 0x0002, 0, 0);
+}
+
 void WebWindow::AddCustomScheme(UTF8String scheme, WebResourceRequestedCallback requestHandler)
 {
 	_schemeToRequestHandler[scheme] = requestHandler;
 }
+
+

@@ -215,4 +215,9 @@ void WebWindow::AddCustomScheme(UTF8String scheme, WebResourceRequestedCallback 
 		(void*)requestHandler, NULL);
 }
 
+void WebWindow::CloseWindow()
+{
+	gtk_main_quit();
+}
+
 #endif
