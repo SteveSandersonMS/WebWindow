@@ -93,6 +93,7 @@ namespace WebWindows
                 gcHandle.Free();
             }
             _gcHandlesToFree.Clear();
+            WebWindow_dtor(_nativeWebWindow);
         }
 
         public void Show() => WebWindow_Show(_nativeWebWindow);
