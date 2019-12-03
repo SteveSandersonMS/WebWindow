@@ -20,8 +20,7 @@ namespace WebWindows.Blazor
         internal static string BaseUriAbsolute { get; private set; }
         internal static DesktopJSRuntime DesktopJSRuntime { get; private set; }
         internal static DesktopRenderer DesktopRenderer { get; private set; }
-
-        internal static WebWindow webWindow;
+        internal static WebWindow WebWindow { get; private set; }
 
         public static void Run<TStartup>(string windowTitle, string hostHtmlPath)
         {
@@ -30,7 +29,7 @@ namespace WebWindows.Blazor
                 UnhandledException(exception);
             };
 
-            webWindow = new WebWindow(windowTitle, options =>
+            WebWindow = new WebWindow(windowTitle, options =>
             {
                 var contentRootAbsolute = Path.GetDirectoryName(Path.GetFullPath(hostHtmlPath));
 
@@ -57,11 +56,11 @@ namespace WebWindows.Blazor
             });
 
             CancellationTokenSource appLifetimeCts = new CancellationTokenSource();
-            Task.Factory.StartNew(async() =>
+            Task.Factory.StartNew(async () =>
             {
                 try
                 {
-                    var ipc = new IPC(webWindow);
+                    var ipc = new IPC(WebWindow);
                     await RunAsync<TStartup>(ipc, appLifetimeCts.Token);
                 }
                 catch (Exception ex)
@@ -73,8 +72,8 @@ namespace WebWindows.Blazor
 
             try
             {
-                webWindow.NavigateToUrl(BlazorAppScheme + "://app/");
-                webWindow.WaitForExit();
+                WebWindow.NavigateToUrl(BlazorAppScheme + "://app/");
+                WebWindow.WaitForExit();
             }
             finally
             {
@@ -110,7 +109,7 @@ namespace WebWindows.Blazor
 
         private static void UnhandledException(Exception ex)
         {
-            webWindow.ShowMessage("Error", $"{ex.Message}\n{ex.StackTrace}");
+            WebWindow.ShowMessage("Error", $"{ex.Message}\n{ex.StackTrace}");
         }
 
         private static async Task RunAsync<TStartup>(IPC ipc, CancellationToken appLifetime)
@@ -121,6 +120,7 @@ namespace WebWindows.Blazor
 
             var serviceCollection = new ServiceCollection();
             serviceCollection.AddLogging(configure => configure.AddConsole());
+            serviceCollection.AddSingleton(WebWindow);
             serviceCollection.AddSingleton<NavigationManager>(DesktopNavigationManager.Instance);
             serviceCollection.AddSingleton<IJSRuntime>(DesktopJSRuntime);
             serviceCollection.AddSingleton<INavigationInterception, DesktopNavigationInterception>();
