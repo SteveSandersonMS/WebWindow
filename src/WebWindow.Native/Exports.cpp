@@ -30,6 +30,11 @@ extern "C"
 		return new WebWindow(title, parent, webMessageReceivedCallback);
 	}
 
+	EXPORTED void WebWindow_dtor(WebWindow* instance)
+	{
+		delete instance;
+	}
+
 	EXPORTED void WebWindow_SetTitle(WebWindow* instance, UTF8String title)
 	{
 		instance->SetTitle(title);
@@ -73,5 +78,15 @@ extern "C"
 	EXPORTED void WebWindow_AddCustomScheme(WebWindow* instance, UTF8String scheme, WebResourceRequestedCallback requestHandler)
 	{
 		instance->AddCustomScheme(scheme, requestHandler);
+	}
+
+	EXPORTED void WebWindow_GetSize(WebWindow* instance, int* width, int* height)
+	{
+		instance->GetSize(width, height);
+	}
+
+	EXPORTED void WebWindow_SetSize(WebWindow* instance, int width, int height)
+	{
+		instance->SetSize(width, height);
 	}
 }
