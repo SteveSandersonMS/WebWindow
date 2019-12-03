@@ -15,6 +15,7 @@ namespace WebWindows
         [DllImport(DllName)] static extern IntPtr WebWindow_register_win32(IntPtr hInstance);
         [DllImport(DllName)] static extern IntPtr WebWindow_register_mac();
         [DllImport(DllName)] static extern IntPtr WebWindow_ctor([MarshalAs(UnmanagedType.LPUTF8Str)] string title, IntPtr parentWebWindow, IntPtr webMessageReceivedCallback);
+        [DllImport(DllName)] static extern void WebWindow_dtor(IntPtr instance);
         [DllImport(DllName)] static extern IntPtr WebWindow_getHwnd_win32(IntPtr instance);
         [DllImport(DllName)] static extern void WebWindow_SetTitle(IntPtr instance, [MarshalAs(UnmanagedType.LPUTF8Str)] string title);
         [DllImport(DllName)] static extern void WebWindow_Show(IntPtr instance);
@@ -25,6 +26,8 @@ namespace WebWindows
         [DllImport(DllName)] static extern void WebWindow_ShowMessage(IntPtr instance, [MarshalAs(UnmanagedType.LPUTF8Str)] string title, [MarshalAs(UnmanagedType.LPUTF8Str)] string body, uint type);
         [DllImport(DllName)] static extern void WebWindow_SendMessage(IntPtr instance, [MarshalAs(UnmanagedType.LPUTF8Str)] string message);
         [DllImport(DllName)] static extern void WebWindow_AddCustomScheme(IntPtr instance, [MarshalAs(UnmanagedType.LPUTF8Str)] string scheme, IntPtr requestHandler);
+        [DllImport(DllName)] static extern void WebWindow_GetSize(IntPtr instance, out int width, out int height);
+        [DllImport(DllName)] static extern void WebWindow_SetSize(IntPtr instance, int width, int height);
 
         private List<GCHandle> _gcHandlesToFree = new List<GCHandle>();
         private IntPtr _nativeWebWindow;
@@ -211,6 +214,47 @@ namespace WebWindows
 
             var callbackPtr = Marshal.GetFunctionPointerForDelegate(callback);
             WebWindow_AddCustomScheme(_nativeWebWindow, scheme, callbackPtr);
+        }
+
+        private int _width;
+        private int _height;
+
+        private void GetSize()
+        {
+            WebWindow_GetSize(_nativeWebWindow, out _width, out _height);
+        }
+
+        private void SetSize()
+        {
+            WebWindow_SetSize(_nativeWebWindow, _width, _height);
+        }
+
+        public int Width
+        {
+            get
+            {
+                GetSize();
+                return _width;
+            }
+            set
+            {
+                _width = value;
+                SetSize();
+            }
+        }
+
+        public int Height
+        {
+            get
+            {
+                GetSize();
+                return _height;
+            }
+            set
+            {
+                _height = value;
+                SetSize();
+            }
         }
     }
 }
