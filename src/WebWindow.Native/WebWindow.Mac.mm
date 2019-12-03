@@ -184,8 +184,8 @@ void WebWindow::SetSize(int width, int height)
     frame.origin.x += (CGFloat)width;
     frame.origin.y -= frame.size.height;
     frame.origin.y += (CGFloat)height;
-    frame.size = CGSize(width: (CGFloat)width, height: (CGFloat)height);
-    [window setFrame: frame display: YES]
+    frame.size = CGSize((CGFloat)width, (CGFloat)height);
+    [window setFrame: frame display: YES];
 }
 
 #endif
