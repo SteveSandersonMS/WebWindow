@@ -215,4 +215,14 @@ void WebWindow::AddCustomScheme(UTF8String scheme, WebResourceRequestedCallback 
 		(void*)requestHandler, NULL);
 }
 
+void WebWindow::GetSize(int* width, int* height)
+{
+	gtk_window_get_size(_window, width, height);
+}
+
+void WebWindow::SetSize(int width, int height)
+{
+	gtk_window_resize(_window, width, height);
+}
+
 #endif

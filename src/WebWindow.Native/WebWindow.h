@@ -63,6 +63,8 @@ public:
 	void NavigateToString(UTF8String content);
 	void SendMessage(UTF8String message);
 	void AddCustomScheme(UTF8String scheme, WebResourceRequestedCallback requestHandler);
+	void GetSize(int* width, int* height);
+	void SetSize(int width, int height);
 };
 
 #endif // !WEBWINDOW_H

@@ -328,3 +328,16 @@ void WebWindow::AddCustomScheme(UTF8String scheme, WebResourceRequestedCallback 
 {
 	_schemeToRequestHandler[scheme] = requestHandler;
 }
+
+void WebWindow::GetSize(int* width, int* height)
+{
+	RECT rect = {};
+	GetWindowRect(_hWnd, &rect);
+	if (width) *width = rect.right - rect.left;
+	if (height) *height = rect.bottom - rect.top;
+}
+
+void WebWindow::SetSize(int width, int height)
+{
+	SetWindowPos(_hWnd, HWND_TOP, 0, 0, width, height, SWP_NOMOVE | SWP_NOZORDER);
+}

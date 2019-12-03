@@ -168,4 +168,24 @@ void WebWindow::AddCustomScheme(UTF8String scheme, WebResourceRequestedCallback 
     [webviewConfiguration setURLSchemeHandler:schemeHandler forURLScheme:nsscheme];
 }
 
+void WebWindow::GetSize(int* width, int* height)
+{
+    NSWindow* window = (NSWindow*)_window;
+    NSSize size = [[window contentView] frame].size;
+    if (width) *width = (int)roundf(size.width);
+    if (height) *height = (int)roundf(size.height);
+}
+
+void WebWindow::SetSize(int width, int height)
+{
+    NSWindow* window = (NSWindow*)_window;
+    NSRect frame = [window frame];
+    frame.origin.x -= frame.size.width;
+    frame.origin.x += (CGFloat)width;
+    frame.origin.y -= frame.size.height;
+    frame.origin.y += (CGFloat)height;
+    frame.size = CGSize(width: (CGFloat)width, height: (CGFloat)height);
+    [window setFrame: frame display: YES]
+}
+
 #endif
