@@ -176,15 +176,17 @@ void WebWindow::GetSize(int* width, int* height)
     if (height) *height = (int)roundf(size.height);
 }
 
-void WebWindow::SetSize(int width, int height)
+void WebWindow::SetSize(int w, int h)
 {
+    CGFloat fw = (CGFloat)width;
+    CGFloat fh = (CGFloat)height;
     NSWindow* window = (NSWindow*)_window;
     NSRect frame = [window frame];
     frame.origin.x -= frame.size.width;
-    frame.origin.x += (CGFloat)width;
+    frame.origin.x += fw;
     frame.origin.y -= frame.size.height;
-    frame.origin.y += (CGFloat)height;
-    frame.size = CGSize((CGFloat)width, (CGFloat)height);
+    frame.origin.y += fh;
+    frame.size = CGSize(fw, fh);
     [window setFrame: frame display: YES];
 }
 
