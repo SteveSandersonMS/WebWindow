@@ -37,7 +37,7 @@ WebWindow::WebWindow(UTF8String title, WebWindow* parent, WebMessageReceivedCall
 		g_signal_connect(G_OBJECT(_window), "destroy",
 			G_CALLBACK(+[](GtkWidget* w, gpointer arg) {
 				gtk_main_quit();
-			}),
+				}),
 			this);
 	}
 }
@@ -217,12 +217,12 @@ void WebWindow::AddCustomScheme(UTF8String scheme, WebResourceRequestedCallback 
 
 void WebWindow::GetSize(int* width, int* height)
 {
-	gtk_window_get_size(_window, width, height);
+	gtk_window_get_size((GtkWindow*)_window, width, height);
 }
 
 void WebWindow::SetSize(int width, int height)
 {
-	gtk_window_resize(_window, width, height);
+	gtk_window_resize((GtkWindow*)_window, width, height);
 }
 
 #endif
