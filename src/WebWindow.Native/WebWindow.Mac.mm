@@ -176,7 +176,7 @@ void WebWindow::GetSize(int* width, int* height)
     if (height) *height = (int)roundf(size.height);
 }
 
-void WebWindow::SetSize(int w, int h)
+void WebWindow::SetSize(int width, int height)
 {
     CGFloat fw = (CGFloat)width;
     CGFloat fh = (CGFloat)height;
