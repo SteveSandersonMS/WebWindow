@@ -1,4 +1,3 @@
-#ifdef OS_MAC
 #include "WebWindow.h"
 #import "WebWindow.Mac.AppDelegate.h"
 #import "WebWindow.Mac.UiDelegate.h"
@@ -167,5 +166,3 @@ void WebWindow::AddCustomScheme(UTF8String scheme, WebResourceRequestedCallback 
     NSString* nsscheme = [NSString stringWithUTF8String:scheme];
     [webviewConfiguration setURLSchemeHandler:schemeHandler forURLScheme:nsscheme];
 }
-
-#endif

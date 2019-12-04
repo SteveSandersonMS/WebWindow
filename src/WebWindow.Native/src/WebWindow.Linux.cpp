@@ -1,6 +1,6 @@
 // For this to build on WSL (Ubuntu 18.04) you need to:
 //  sudo apt-get install libgtk-3-dev libwebkit2gtk-4.0-dev
-#ifdef OS_LINUX
+
 #include "WebWindow.h"
 #include <mutex>
 #include <condition_variable>
@@ -214,5 +214,3 @@ void WebWindow::AddCustomScheme(UTF8String scheme, WebResourceRequestedCallback 
 		(WebKitURISchemeRequestCallback)HandleCustomSchemeRequest,
 		(void*)requestHandler, NULL);
 }
-
-#endif

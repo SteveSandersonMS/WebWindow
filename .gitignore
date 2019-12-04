@@ -1,6 +1,7 @@
 .vs/
 bin/
 obj/
+builddir/
 *.user
 Debug/
 Release/

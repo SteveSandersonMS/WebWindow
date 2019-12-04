@@ -1,0 +1,37 @@
+cmake_minimum_required(VERSION 3.1)
+project(WebWindow.Native)
+include_directories(include)
+set(CMAKE_SHARED_LIBRARY_PREFIX "")
+set(CMAKE_SHARED_LIBRARY_PREFIX_C "")
+set(CMAKE_SHARED_LIBRARY_PREFIX_CXX "")
+set(CMAKE_SHARED_LIBRARY_PREFIX_OBJC "")
+set(CMAKE_SHARED_LIBRARY_PREFIX_OBJCXX "")
+
+if(APPLE)
+file(GLOB LIB_SOURCE "src/WebWindow.Mac.*")
+else()
+file(GLOB LIB_SOURCE "src/WebWindow.Linux.*")
+
+find_package(PkgConfig REQUIRED)
+
+pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
+include_directories(${GTK3_INCLUDE_DIRS})
+link_directories(${GTK3_LIBRARY_DIRS})
+add_definitions(${GTK3_CFLAGS_OTHER})
+
+pkg_check_modules(WEBKIT4 REQUIRED webkit2gtk-4.0)
+include_directories(${WEBKIT4_INCLUDE_DIRS})
+link_directories(${WEBKIT4_LIBRARY_DIRS})
+add_definitions(${WEBKIT4_CFLAGS_OTHER})
+endif()
+
+add_library(WebWindow.Native SHARED ${LIB_SOURCE})
+
+if(APPLE)
+target_link_libraries(WebWindow.Native stdc++)
+target_link_libraries(WebWindow.Native "-framework Cocoa")
+target_link_libraries(WebWindow.Native "-framework WebKit")
+else()
+target_link_libraries(WebWindow.Native ${GTK3_LIBRARIES})
+target_link_libraries(WebWindow.Native ${WEBKIT4_LIBRARIES})
+endif()
