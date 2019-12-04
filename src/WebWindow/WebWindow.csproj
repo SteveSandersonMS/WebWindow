@@ -13,7 +13,7 @@
     <NativeAssetRuntimeIdentifier Condition="'$(OS)' != 'Windows_NT' AND '$(IsMacOS)' == 'true'" >osx-x64</NativeAssetRuntimeIdentifier>
   </PropertyGroup>
 
-  <ItemGroup Condition="'$(OS)' == 'Windows_NT'">
+  <ItemGroup Condition="'$(OS)' == 'Windows_NT' AND '$(Configuration)' == 'Debug'">
     <ProjectReference Include="..\WebWindow.Native\WebWindow.Native.vcxproj" />
   </ItemGroup>
 
