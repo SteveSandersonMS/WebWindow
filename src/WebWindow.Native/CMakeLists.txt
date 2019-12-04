@@ -9,8 +9,10 @@ set(CMAKE_SHARED_LIBRARY_PREFIX_OBJCXX "")
 
 if(APPLE)
 file(GLOB LIB_SOURCE "src/WebWindow.Mac.*")
+add_definitions(-DOS_MAC)
 else()
 file(GLOB LIB_SOURCE "src/WebWindow.Linux.*")
+add_definitions(-DOS_LINUX)
 
 find_package(PkgConfig REQUIRED)
 
