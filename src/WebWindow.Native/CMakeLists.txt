@@ -1,11 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
 project(WebWindow.Native)
 include_directories(include)
-set(CMAKE_SHARED_LIBRARY_PREFIX "")
-set(CMAKE_SHARED_LIBRARY_PREFIX_C "")
-set(CMAKE_SHARED_LIBRARY_PREFIX_CXX "")
-set(CMAKE_SHARED_LIBRARY_PREFIX_OBJC "")
-set(CMAKE_SHARED_LIBRARY_PREFIX_OBJCXX "")
 
 if(APPLE)
 file(GLOB LIB_SOURCE "src/WebWindow.Mac.*")
