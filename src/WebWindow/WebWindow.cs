@@ -9,24 +9,30 @@ namespace WebWindows
 {
     public class WebWindow
     {
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate void OnWebMessageReceivedCallback([MarshalAs(UnmanagedType.LPUTF8Str)] string message);
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate IntPtr OnWebResourceRequestedCallback([MarshalAs(UnmanagedType.LPUTF8Str)] string url, out int numBytes, [MarshalAs(UnmanagedType.LPUTF8Str)] out string contentType);
+        // Here we use auto charset instead of forcing UTF-8.
+        // Thus the native code for Windows will be much more simple.
+        // Auto charset is UTF-16 on Windows and UTF-8 on Unix(.NET Core 3.0 and later and Mono).
+        // As we target .NET Standard 2.1, we assume it runs on .NET Core 3.0 and later.
+        // We should specify using auto charset because the default value is ANSI.
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Auto)] delegate void OnWebMessageReceivedCallback(string message);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Auto)] delegate IntPtr OnWebResourceRequestedCallback(string url, out int numBytes, out string contentType);
 
         const string DllName = "WebWindow.Native";
         [DllImport(DllName)] static extern IntPtr WebWindow_register_win32(IntPtr hInstance);
         [DllImport(DllName)] static extern IntPtr WebWindow_register_mac();
-        [DllImport(DllName)] static extern IntPtr WebWindow_ctor([MarshalAs(UnmanagedType.LPUTF8Str)] string title, IntPtr parentWebWindow, IntPtr webMessageReceivedCallback);
+        [DllImport(DllName, CharSet = CharSet.Auto)] static extern IntPtr WebWindow_ctor(string title, IntPtr parentWebWindow, IntPtr webMessageReceivedCallback);
         [DllImport(DllName)] static extern void WebWindow_dtor(IntPtr instance);
         [DllImport(DllName)] static extern IntPtr WebWindow_getHwnd_win32(IntPtr instance);
-        [DllImport(DllName)] static extern void WebWindow_SetTitle(IntPtr instance, [MarshalAs(UnmanagedType.LPUTF8Str)] string title);
+        [DllImport(DllName, CharSet = CharSet.Auto)] static extern void WebWindow_SetTitle(IntPtr instance, string title);
         [DllImport(DllName)] static extern void WebWindow_Show(IntPtr instance);
         [DllImport(DllName)] static extern void WebWindow_WaitForExit(IntPtr instance);
         [DllImport(DllName)] static extern void WebWindow_Invoke(IntPtr instance, IntPtr callback);
-        [DllImport(DllName)] static extern void WebWindow_NavigateToString(IntPtr instance, [MarshalAs(UnmanagedType.LPUTF8Str)] string content);
-        [DllImport(DllName)] static extern void WebWindow_NavigateToUrl(IntPtr instance, [MarshalAs(UnmanagedType.LPUTF8Str)] string url);
-        [DllImport(DllName)] static extern void WebWindow_ShowMessage(IntPtr instance, [MarshalAs(UnmanagedType.LPUTF8Str)] string title, [MarshalAs(UnmanagedType.LPUTF8Str)] string body, uint type);
-        [DllImport(DllName)] static extern void WebWindow_SendMessage(IntPtr instance, [MarshalAs(UnmanagedType.LPUTF8Str)] string message);
-        [DllImport(DllName)] static extern void WebWindow_AddCustomScheme(IntPtr instance, [MarshalAs(UnmanagedType.LPUTF8Str)] string scheme, IntPtr requestHandler);
+        [DllImport(DllName, CharSet = CharSet.Auto)] static extern void WebWindow_NavigateToString(IntPtr instance, string content);
+        [DllImport(DllName, CharSet = CharSet.Auto)] static extern void WebWindow_NavigateToUrl(IntPtr instance, string url);
+        [DllImport(DllName, CharSet = CharSet.Auto)] static extern void WebWindow_ShowMessage(IntPtr instance, string title, string body, uint type);
+        [DllImport(DllName, CharSet = CharSet.Auto)] static extern void WebWindow_SendMessage(IntPtr instance, string message);
+        [DllImport(DllName, CharSet = CharSet.Auto)] static extern void WebWindow_AddCustomScheme(IntPtr instance, string scheme, IntPtr requestHandler);
         [DllImport(DllName)] static extern void WebWindow_GetSize(IntPtr instance, out int width, out int height);
         [DllImport(DllName)] static extern void WebWindow_SetSize(IntPtr instance, int width, int height);
         [DllImport(DllName)] static extern void WebWindow_GetScreenSize(IntPtr instance, out int width, out int height);
@@ -182,7 +188,7 @@ namespace WebWindows
             _title = value;
         }
 
-        private void ReceiveWebMessage([MarshalAs(UnmanagedType.LPUTF8Str)] string message)
+        private void ReceiveWebMessage(string message)
         {
             OnWebMessageReceived?.Invoke(this, message);
         }

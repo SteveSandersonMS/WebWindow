@@ -13,7 +13,6 @@
 using namespace Microsoft::WRL;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-std::wstring Utf8ToLPWSTR(UTF8String str);
 LPCWSTR CLASS_NAME = L"WebWindow";
 std::mutex invokeLockMutex;
 HINSTANCE WebWindow::_hInstance;
@@ -47,16 +46,15 @@ void WebWindow::Register(HINSTANCE hInstance)
 	SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE);
 }
 
-WebWindow::WebWindow(UTF8String title, WebWindow* parent, WebMessageReceivedCallback webMessageReceivedCallback)
+WebWindow::WebWindow(AutoString title, WebWindow* parent, WebMessageReceivedCallback webMessageReceivedCallback)
 {
 	// Create the window
 	_webMessageReceivedCallback = webMessageReceivedCallback;
 	_parent = parent;
-	std::wstring wtitle = Utf8ToLPWSTR(title);
 	_hWnd = CreateWindowExW(
 		0,                              // Optional window styles.
 		CLASS_NAME,                     // Window class
-		wtitle.c_str(),					// Window text
+		title,							// Window text
 		WS_OVERLAPPEDWINDOW,            // Window style
 
 		// Size and position
@@ -138,10 +136,9 @@ void WebWindow::RefitContent()
 	}
 }
 
-void WebWindow::SetTitle(UTF8String title)
+void WebWindow::SetTitle(AutoString title)
 {
-	std::wstring wtitle = Utf8ToLPWSTR(title);
-	SetWindowTextW(_hWnd, wtitle.c_str());
+	SetWindowTextW(_hWnd, title);
 }
 
 void WebWindow::Show()
@@ -170,11 +167,11 @@ void WebWindow::WaitForExit()
 	}
 }
 
-void WebWindow::ShowMessage(UTF8String title, UTF8String body, UINT type)
+void WebWindow::ShowMessage(AutoString title, AutoString body, UINT type)
 {
 	ShowMessageParams* params = new ShowMessageParams;
-	params->title = Utf8ToLPWSTR(title);
-	params->body = Utf8ToLPWSTR(body);
+	params->title = title;
+	params->body = body;
 	params->type = type;
 	PostMessageW(_hWnd, WM_USER_SHOWMESSAGE, (WPARAM)params, 0);
 }
@@ -188,22 +185,6 @@ void WebWindow::Invoke(ACTION callback)
 	// TODO: Add return values, exception handling, etc.
 	std::unique_lock<std::mutex> uLock(invokeLockMutex);
 	waitInfo.completionNotifier.wait(uLock, [&] { return waitInfo.isCompleted; });
-}
-
-std::wstring Utf8ToLPWSTR(UTF8String str)
-{
-	int wchars_num = MultiByteToWideChar(CP_UTF8, 0, str, -1, NULL, 0);
-	std::wstring wstr(wchars_num, L'\0');
-	MultiByteToWideChar(CP_UTF8, 0, str, -1, wstr.data(), wchars_num);
-	return wstr;
-}
-
-std::string LPWSTRToUtf8(LPWSTR str)
-{
-	int utf8chars_num = WideCharToMultiByte(CP_UTF8, 0, str, -1, NULL, 0, NULL, NULL);
-	std::string utf8(utf8chars_num, '\0');
-	WideCharToMultiByte(CP_UTF8, 0, str, -1, utf8.data(), utf8chars_num, NULL, NULL);
-	return utf8;
 }
 
 void WebWindow::AttachWebView()
@@ -238,8 +219,7 @@ void WebWindow::AttachWebView()
 							[this](IWebView2WebView* webview, IWebView2WebMessageReceivedEventArgs* args) -> HRESULT {
 								wil::unique_cotaskmem_string message;
 								args->get_WebMessageAsString(&message);
-								std::string messageUtf8 = LPWSTRToUtf8(message.get());
-								_webMessageReceivedCallback(messageUtf8.data());
+								_webMessageReceivedCallback(message.get());
 								return S_OK;
 							}).Get(), &webMessageToken);
 
@@ -252,21 +232,21 @@ void WebWindow::AttachWebView()
 
 								wil::unique_cotaskmem_string uri;
 								req->get_Uri(&uri);
-								std::string uriString = LPWSTRToUtf8(uri.get());
-								size_t colonPos = uriString.find(':', 0);
+								std::wstring uriString = uri.get();
+								size_t colonPos = uriString.find(L':', 0);
 								if (colonPos > 0)
 								{
-									std::string scheme = uriString.substr(0, colonPos);
+									std::wstring scheme = uriString.substr(0, colonPos);
 									WebResourceRequestedCallback handler = _schemeToRequestHandler[scheme];
 									if (handler != NULL)
 									{
 										int numBytes;
-										UTF8String contentType;
-										wil::unique_cotaskmem dotNetResponse(handler(uriString.data(), &numBytes, &contentType));
+										AutoString contentType;
+										wil::unique_cotaskmem dotNetResponse(handler(uriString.c_str(), &numBytes, &contentType));
 
 										if (dotNetResponse != nullptr && contentType != nullptr)
 										{
-											std::wstring contentTypeWS = Utf8ToLPWSTR(contentType);
+											std::wstring contentTypeWS = contentType;
 
 											IStream* dataStream = SHCreateMemStream((BYTE*)dotNetResponse.get(), numBytes);
 											wil::com_ptr<IWebView2WebResourceResponse> response;
@@ -309,25 +289,22 @@ void WebWindow::AttachWebView()
 	}
 }
 
-void WebWindow::NavigateToUrl(UTF8String url)
+void WebWindow::NavigateToUrl(AutoString url)
 {
-	std::wstring urlW = Utf8ToLPWSTR(url);
-	_webviewWindow->Navigate(urlW.c_str());
+	_webviewWindow->Navigate(url);
 }
 
-void WebWindow::NavigateToString(UTF8String content)
+void WebWindow::NavigateToString(AutoString content)
 {
-	std::wstring contentW = Utf8ToLPWSTR(content);
-	_webviewWindow->NavigateToString(contentW.c_str());
+	_webviewWindow->NavigateToString(content);
 }
 
-void WebWindow::SendMessage(UTF8String message)
+void WebWindow::SendMessage(AutoString message)
 {
-	std::wstring messageW = Utf8ToLPWSTR(message);
-	_webviewWindow->PostWebMessageAsString(messageW.c_str());
+	_webviewWindow->PostWebMessageAsString(message);
 }
 
-void WebWindow::AddCustomScheme(UTF8String scheme, WebResourceRequestedCallback requestHandler)
+void WebWindow::AddCustomScheme(AutoString scheme, WebResourceRequestedCallback requestHandler)
 {
 	_schemeToRequestHandler[scheme] = requestHandler;
 }
