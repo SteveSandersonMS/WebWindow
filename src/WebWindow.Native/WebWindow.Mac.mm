@@ -49,6 +49,17 @@ WebWindow::WebWindow(UTF8String title, WebWindow* parent, WebMessageReceivedCall
     _webview = nil;
 }
 
+WebWindow::~WebWindow()
+{
+    WKWebViewConfiguration *webViewConfiguration = (WKWebViewConfiguration*)_webviewConfiguration;
+    [webViewConfiguration release];
+    WKWebView *webView = (WKWebView*)_webview;
+    [webView release];
+    NSWindow* window = (NSWindow*)_window;
+    [window close];
+    [window release];
+}
+
 void WebWindow::AttachWebView()
 {
     MyUiDelegate *uiDelegate = [[[MyUiDelegate alloc] init] autorelease];
@@ -218,6 +229,13 @@ void WebWindow::SetPosition(int x, int y)
     frame.origin.x = frame.size.width + (CGFloat)x;
     frame.origin.y = frame.size.height + (CGFloat)y;
     [window setFrame: frame display: YES];
+}
+
+void WebWindow::SetTopmost(bool topmost)
+{
+    NSWindow* window = (NSWindow*)_window;
+    if (topmost) [window setLevel:NSFloatingWindowLevel];
+    else [window setLevel:NSNormalWindowLevel];
 }
 
 #endif

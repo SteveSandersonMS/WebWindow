@@ -54,6 +54,7 @@ public:
 #endif
 
 	WebWindow(UTF8String title, WebWindow* parent, WebMessageReceivedCallback webMessageReceivedCallback);
+	~WebWindow();
 	void SetTitle(UTF8String title);
 	void Show();
 	void WaitForExit();
@@ -69,6 +70,7 @@ public:
 	unsigned int GetScreenDpi();
 	void GetPosition(int* x, int* y);
 	void SetPosition(int x, int y);
+	void SetTopmost(bool topmost);
 };
 
 #endif // !WEBWINDOW_H
