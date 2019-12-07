@@ -25,7 +25,7 @@ extern "C"
 	}
 #endif
 
-	EXPORTED WebWindow* WebWindow_ctor(UTF8String title, WebWindow* parent, WebMessageReceivedCallback webMessageReceivedCallback)
+	EXPORTED WebWindow* WebWindow_ctor(AutoString title, WebWindow* parent, WebMessageReceivedCallback webMessageReceivedCallback)
 	{
 		return new WebWindow(title, parent, webMessageReceivedCallback);
 	}
@@ -35,7 +35,7 @@ extern "C"
 		delete instance;
 	}
 
-	EXPORTED void WebWindow_SetTitle(WebWindow* instance, UTF8String title)
+	EXPORTED void WebWindow_SetTitle(WebWindow* instance, AutoString title)
 	{
 		instance->SetTitle(title);
 	}
@@ -50,7 +50,7 @@ extern "C"
 		instance->WaitForExit();
 	}
 
-	EXPORTED void WebWindow_ShowMessage(WebWindow* instance, UTF8String title, UTF8String body, unsigned int type)
+	EXPORTED void WebWindow_ShowMessage(WebWindow* instance, AutoString title, AutoString body, unsigned int type)
 	{
 		instance->ShowMessage(title, body, type);
 	}
@@ -60,22 +60,22 @@ extern "C"
 		instance->Invoke(callback);
 	}
 
-	EXPORTED void WebWindow_NavigateToString(WebWindow* instance, UTF8String content)
+	EXPORTED void WebWindow_NavigateToString(WebWindow* instance, AutoString content)
 	{
 		instance->NavigateToString(content);
 	}
 
-	EXPORTED void WebWindow_NavigateToUrl(WebWindow* instance, UTF8String url)
+	EXPORTED void WebWindow_NavigateToUrl(WebWindow* instance, AutoString url)
 	{
 		instance->NavigateToUrl(url);
 	}
 
-	EXPORTED void WebWindow_SendMessage(WebWindow* instance, UTF8String message)
+	EXPORTED void WebWindow_SendMessage(WebWindow* instance, AutoString message)
 	{
 		instance->SendMessage(message);
 	}
 
-	EXPORTED void WebWindow_AddCustomScheme(WebWindow* instance, UTF8String scheme, WebResourceRequestedCallback requestHandler)
+	EXPORTED void WebWindow_AddCustomScheme(WebWindow* instance, AutoString scheme, WebResourceRequestedCallback requestHandler)
 	{
 		instance->AddCustomScheme(scheme, requestHandler);
 	}

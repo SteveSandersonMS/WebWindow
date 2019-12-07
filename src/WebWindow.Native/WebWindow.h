@@ -9,18 +9,18 @@
 #include <wil/com.h>
 #include <WebView2.h>
 #define WEBWINDOW_STDCALL __stdcall
+typedef const wchar_t* AutoString;
 #else
 #ifdef OS_LINUX
 #include <gtk/gtk.h>
 #endif
 #define WEBWINDOW_STDCALL
+typedef const char* AutoString;
 #endif
 
-typedef char* UTF8String;
-
 typedef void (WEBWINDOW_STDCALL* ACTION)();
-typedef void (WEBWINDOW_STDCALL* WebMessageReceivedCallback)(UTF8String message);
-typedef void* (WEBWINDOW_STDCALL* WebResourceRequestedCallback)(UTF8String url, int* outNumBytes, UTF8String* outContentType);
+typedef void (WEBWINDOW_STDCALL* WebMessageReceivedCallback)(AutoString message);
+typedef void* (WEBWINDOW_STDCALL* WebResourceRequestedCallback)(AutoString url, int* outNumBytes, AutoString* outContentType);
 
 class WebWindow
 {
@@ -32,7 +32,7 @@ private:
 	WebWindow* _parent;
 	wil::com_ptr<IWebView2Environment> _webviewEnvironment;
 	wil::com_ptr<IWebView2WebView> _webviewWindow;
-	std::map<std::string, WebResourceRequestedCallback> _schemeToRequestHandler;
+	std::map<std::wstring, WebResourceRequestedCallback> _schemeToRequestHandler;
 	void AttachWebView();
 #elif OS_LINUX
 	GtkWidget* _window;
@@ -53,17 +53,17 @@ public:
 	static void Register();
 #endif
 
-	WebWindow(UTF8String title, WebWindow* parent, WebMessageReceivedCallback webMessageReceivedCallback);
+	WebWindow(AutoString title, WebWindow* parent, WebMessageReceivedCallback webMessageReceivedCallback);
 	~WebWindow();
-	void SetTitle(UTF8String title);
+	void SetTitle(AutoString title);
 	void Show();
 	void WaitForExit();
-	void ShowMessage(UTF8String title, UTF8String body, unsigned int type);
+	void ShowMessage(AutoString title, AutoString body, unsigned int type);
 	void Invoke(ACTION callback);
-	void NavigateToUrl(UTF8String url);
-	void NavigateToString(UTF8String content);
-	void SendMessage(UTF8String message);
-	void AddCustomScheme(UTF8String scheme, WebResourceRequestedCallback requestHandler);
+	void NavigateToUrl(AutoString url);
+	void NavigateToString(AutoString content);
+	void SendMessage(AutoString message);
+	void AddCustomScheme(AutoString scheme, WebResourceRequestedCallback requestHandler);
 	void GetSize(int* width, int* height);
 	void SetSize(int width, int height);
 	void GetScreenSize(int* width, int* height);
