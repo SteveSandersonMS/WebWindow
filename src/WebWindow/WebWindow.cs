@@ -29,6 +29,8 @@ namespace WebWindows
         [DllImport(DllName)] static extern void WebWindow_AddCustomScheme(IntPtr instance, [MarshalAs(UnmanagedType.LPUTF8Str)] string scheme, IntPtr requestHandler);
         [DllImport(DllName)] static extern void WebWindow_GetSize(IntPtr instance, out int width, out int height);
         [DllImport(DllName)] static extern void WebWindow_SetSize(IntPtr instance, int width, int height);
+        [DllImport(DllName)] static extern void WebWindow_GetScreenSize(IntPtr instance, out int width, out int height);
+        [DllImport(DllName)] static extern uint WebWindow_GetScreenDpi(IntPtr instance);
         [DllImport(DllName)] static extern void WebWindow_GetPosition(IntPtr instance, out int x, out int y);
         [DllImport(DllName)] static extern void WebWindow_SetPosition(IntPtr instance, int x, int y);
 
@@ -236,6 +238,7 @@ namespace WebWindows
             }
             set
             {
+                GetSize();
                 _width = value;
                 SetSize();
             }
@@ -250,6 +253,7 @@ namespace WebWindows
             }
             set
             {
+                GetSize();
                 _height = value;
                 SetSize();
             }
@@ -286,6 +290,7 @@ namespace WebWindows
             }
             set
             {
+                GetPosition();
                 _x = value;
                 SetPosition();
             }
@@ -300,6 +305,7 @@ namespace WebWindows
             }
             set
             {
+                GetPosition();
                 _y = value;
                 SetPosition();
             }
@@ -319,5 +325,16 @@ namespace WebWindows
                 SetPosition();
             }
         }
+
+        public Size ScreenSize
+        {
+            get
+            {
+                WebWindow_GetScreenSize(_nativeWebWindow, out int width, out int height);
+                return new Size(width, height);
+            }
+        }
+
+        public uint ScreenDpi => WebWindow_GetScreenDpi(_nativeWebWindow);
     }
 }
