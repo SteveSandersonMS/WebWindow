@@ -15,7 +15,7 @@ typedef const wchar_t* AutoString;
 #include <gtk/gtk.h>
 #endif
 #define WEBWINDOW_STDCALL
-typedef const char* AutoString;
+typedef char* AutoString;
 typedef AutoString UTF8String;
 #endif
 
