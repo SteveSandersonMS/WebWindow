@@ -225,6 +225,21 @@ void WebWindow::SetSize(int width, int height)
 	gtk_window_resize((GtkWindow*)_window, width, height);
 }
 
+void WebWindow::GetScreenSize(int* width, int* height)
+{
+	GdkScreen* screen = gtk_window_get_screen((GtkWindow*)_window);
+	if (width) *width = gdk_screen_get_width(screen);
+	if (height) *height = gdk_screen_get_height(screen);
+}
+
+unsigned int WebWindow::GetScreenDpi()
+{
+	GdkScreen* screen = gtk_window_get_screen((GtkWindow*)_window);
+	gdouble dpi = gdk_screen_get_resolution(screen);
+	if (dpi < 0) return 96;
+	else return (unsigned int)dpi;
+}
+
 void WebWindow::GetPosition(int* x, int* y)
 {
 	gtk_window_get_position((GtkWindow*)_window, x, y);

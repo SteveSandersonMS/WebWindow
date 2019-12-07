@@ -190,6 +190,19 @@ void WebWindow::SetSize(int width, int height)
     [window setFrame: frame display: YES];
 }
 
+void WebWindow::GetScreenSize(int* width, int* height)
+{
+    NSWindow* window = (NSWindow*)_window;
+    NSSize size = [[window screen] frame].size;
+    if (width) *width = (int)roundf(size.width);
+    if (height) *height = (int)roundf(size.height);
+}
+
+unsigned int WebWindow::GetScreenDpi()
+{
+	return 72;
+}
+
 void WebWindow::GetPosition(int* x, int* y)
 {
     NSWindow* window = (NSWindow*)_window;

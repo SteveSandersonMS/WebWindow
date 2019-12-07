@@ -65,6 +65,8 @@ public:
 	void AddCustomScheme(UTF8String scheme, WebResourceRequestedCallback requestHandler);
 	void GetSize(int* width, int* height);
 	void SetSize(int width, int height);
+	void GetScreenSize(int* width, int* height);
+	unsigned int GetScreenDpi();
 	void GetPosition(int* x, int* y);
 	void SetPosition(int x, int y);
 };

@@ -1,7 +1,7 @@
 #include "WebWindow.h"
 
 #ifdef _WIN32
-#   define EXPORTED  __declspec( dllexport )
+# define EXPORTED __declspec(dllexport)
 #else
 # define EXPORTED
 #endif
@@ -88,6 +88,16 @@ extern "C"
 	EXPORTED void WebWindow_SetSize(WebWindow* instance, int width, int height)
 	{
 		instance->SetSize(width, height);
+	}
+
+	EXPORTED void WebWindow_GetScreenSize(WebWindow* instance, int* width, int* height)
+	{
+		instance->GetScreenSize(width, height);
+	}
+
+	EXPORTED unsigned int WebWindow_GetScreenDpi(WebWindow* instance)
+	{
+		return instance->GetScreenDpi();
 	}
 
 	EXPORTED void WebWindow_GetPosition(WebWindow* instance, int* x, int* y)

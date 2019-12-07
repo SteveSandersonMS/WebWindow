@@ -342,6 +342,19 @@ void WebWindow::SetSize(int width, int height)
 	SetWindowPos(_hWnd, HWND_TOP, 0, 0, width, height, SWP_NOMOVE | SWP_NOZORDER);
 }
 
+void WebWindow::GetScreenSize(int* width, int* height)
+{
+	RECT rect = {};
+	GetWindowRect(HWND_DESKTOP, &rect);
+	if (width) *width = rect.right - rect.left;
+	if (height) *height = rect.bottom - rect.top;
+}
+
+unsigned int WebWindow::GetScreenDpi()
+{
+	return GetDpiForWindow(_hWnd);
+}
+
 void WebWindow::GetPosition(int* x, int* y)
 {
 	RECT rect = {};
