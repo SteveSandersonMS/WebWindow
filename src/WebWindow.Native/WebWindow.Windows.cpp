@@ -70,6 +70,9 @@ WebWindow::WebWindow(UTF8String title, WebWindow* parent, WebMessageReceivedCall
 	hwndToWebWindow[_hWnd] = this;
 }
 
+// Needn't to release the handles.
+WebWindow::~WebWindow() {}
+
 HWND WebWindow::getHwnd()
 {
 	return _hWnd;
@@ -366,4 +369,9 @@ void WebWindow::GetPosition(int* x, int* y)
 void WebWindow::SetPosition(int x, int y)
 {
 	SetWindowPos(_hWnd, HWND_TOP, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+}
+
+void WebWindow::SetTopmost(bool topmost)
+{
+	SetWindowPos(_hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
 }

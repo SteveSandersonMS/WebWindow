@@ -37,9 +37,14 @@ WebWindow::WebWindow(UTF8String title, WebWindow* parent, WebMessageReceivedCall
 		g_signal_connect(G_OBJECT(_window), "destroy",
 			G_CALLBACK(+[](GtkWidget* w, gpointer arg) {
 				gtk_main_quit();
-				}),
+			}),
 			this);
 	}
+}
+
+WebWindow::~WebWindow()
+{
+	gtk_widget_destroy(_window);
 }
 
 void HandleWebMessage(WebKitUserContentManager* contentManager, WebKitJavascriptResult* jsResult, gpointer arg)
@@ -248,6 +253,11 @@ void WebWindow::GetPosition(int* x, int* y)
 void WebWindow::SetPosition(int x, int y)
 {
 	gtk_window_move((GtkWindow*)_window, x, y);
+}
+
+void WebWindow::SetTopmost(bool topmost)
+{
+	gtk_window_set_keep_above((GtkWindow*)_window, topmost ? TRUE : FALSE);
 }
 
 #endif
