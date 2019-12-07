@@ -171,7 +171,7 @@ void WebWindow::AddCustomScheme(UTF8String scheme, WebResourceRequestedCallback 
 void WebWindow::GetSize(int* width, int* height)
 {
     NSWindow* window = (NSWindow*)_window;
-    NSSize size = [[window contentView] frame].size;
+    NSSize size = [window frame].size;
     if (width) *width = (int)roundf(size.width);
     if (height) *height = (int)roundf(size.height);
 }
@@ -187,6 +187,23 @@ void WebWindow::SetSize(int width, int height)
     frame.origin.y -= frame.size.height;
     frame.origin.y += fh;
     frame.size = CGSizeMake(fw, fh);
+    [window setFrame: frame display: YES];
+}
+
+void WebWindow::GetPosition(int* x, int* y)
+{
+    NSWindow* window = (NSWindow*)_window;
+    NSRect frame = [window frame];
+    if (x) *x = (int)roundf(frame.origin.x - frame.size.width);
+    if (y) *y = (int)roundf(frame.origin.y - frame.size.height);
+}
+
+void WebWindow::SetPosition(int x, int y)
+{
+    NSWindow* window = (NSWindow*)_window;
+    NSRect frame = [window frame];
+    frame.origin.x = frame.size.width + (CGFloat)x;
+    frame.origin.y = frame.size.height + (CGFloat)y;
     [window setFrame: frame display: YES];
 }
 
