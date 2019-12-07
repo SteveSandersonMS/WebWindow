@@ -341,3 +341,16 @@ void WebWindow::SetSize(int width, int height)
 {
 	SetWindowPos(_hWnd, HWND_TOP, 0, 0, width, height, SWP_NOMOVE | SWP_NOZORDER);
 }
+
+void WebWindow::GetPosition(int* x, int* y)
+{
+	RECT rect = {};
+	GetWindowRect(_hWnd, &rect);
+	if (x) *x = rect.left;
+	if (y) *y = rect.top;
+}
+
+void WebWindow::SetPosition(int x, int y)
+{
+	SetWindowPos(_hWnd, HWND_TOP, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+}
