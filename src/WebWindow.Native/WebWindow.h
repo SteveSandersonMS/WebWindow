@@ -16,6 +16,7 @@ typedef const wchar_t* AutoString;
 #endif
 #define WEBWINDOW_STDCALL
 typedef const char* AutoString;
+typedef AutoString UTF8String;
 #endif
 
 typedef void (WEBWINDOW_STDCALL* ACTION)();
