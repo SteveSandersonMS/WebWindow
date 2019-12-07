@@ -109,4 +109,9 @@ extern "C"
 	{
 		instance->SetPosition(x, y);
 	}
+
+	EXPORTED void WebWindow_SetTopmost(WebWindow* instance, int topmost)
+	{
+		instance->SetTopmost(topmost);
+	}
 }

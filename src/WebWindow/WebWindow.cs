@@ -33,6 +33,7 @@ namespace WebWindows
         [DllImport(DllName)] static extern uint WebWindow_GetScreenDpi(IntPtr instance);
         [DllImport(DllName)] static extern void WebWindow_GetPosition(IntPtr instance, out int x, out int y);
         [DllImport(DllName)] static extern void WebWindow_SetPosition(IntPtr instance, int x, int y);
+        [DllImport(DllName)] static extern void WebWindow_SetTopmost(IntPtr instance, int topmost);
 
         private List<GCHandle> _gcHandlesToFree = new List<GCHandle>();
         private IntPtr _nativeWebWindow;
@@ -336,5 +337,16 @@ namespace WebWindows
         }
 
         public uint ScreenDpi => WebWindow_GetScreenDpi(_nativeWebWindow);
+
+        private bool _topmost = false;
+        public bool Topmost
+        {
+            get => _topmost;
+            set
+            {
+                _topmost = value;
+                WebWindow_SetTopmost(_nativeWebWindow, _topmost ? 1 : 0);
+            }
+        }
     }
 }
