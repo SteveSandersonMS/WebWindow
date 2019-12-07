@@ -89,4 +89,14 @@ extern "C"
 	{
 		instance->SetSize(width, height);
 	}
+
+	EXPORTED void WebWindow_GetPosition(WebWindow* instance, int* x, int* y)
+	{
+		instance->GetPosition(x, y);
+	}
+
+	EXPORTED void WebWindow_SetPosition(WebWindow* instance, int x, int y)
+	{
+		instance->SetPosition(x, y);
+	}
 }

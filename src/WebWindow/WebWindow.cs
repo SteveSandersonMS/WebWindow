@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -28,6 +29,8 @@ namespace WebWindows
         [DllImport(DllName)] static extern void WebWindow_AddCustomScheme(IntPtr instance, [MarshalAs(UnmanagedType.LPUTF8Str)] string scheme, IntPtr requestHandler);
         [DllImport(DllName)] static extern void WebWindow_GetSize(IntPtr instance, out int width, out int height);
         [DllImport(DllName)] static extern void WebWindow_SetSize(IntPtr instance, int width, int height);
+        [DllImport(DllName)] static extern void WebWindow_GetPosition(IntPtr instance, out int x, out int y);
+        [DllImport(DllName)] static extern void WebWindow_SetPosition(IntPtr instance, int x, int y);
 
         private List<GCHandle> _gcHandlesToFree = new List<GCHandle>();
         private IntPtr _nativeWebWindow;
@@ -220,15 +223,9 @@ namespace WebWindows
         private int _width;
         private int _height;
 
-        private void GetSize()
-        {
-            WebWindow_GetSize(_nativeWebWindow, out _width, out _height);
-        }
+        private void GetSize() => WebWindow_GetSize(_nativeWebWindow, out _width, out _height);
 
-        private void SetSize()
-        {
-            WebWindow_SetSize(_nativeWebWindow, _width, _height);
-        }
+        private void SetSize() => WebWindow_SetSize(_nativeWebWindow, _width, _height);
 
         public int Width
         {
@@ -255,6 +252,71 @@ namespace WebWindows
             {
                 _height = value;
                 SetSize();
+            }
+        }
+
+        public Size Size
+        {
+            get
+            {
+                GetSize();
+                return new Size(_width, _height);
+            }
+            set
+            {
+                _width = value.Width;
+                _height = value.Height;
+                SetSize();
+            }
+        }
+
+        private int _x;
+        private int _y;
+
+        private void GetPosition() => WebWindow_GetPosition(_nativeWebWindow, out _x, out _y);
+
+        private void SetPosition() => WebWindow_SetPosition(_nativeWebWindow, _x, _y);
+
+        public int Left
+        {
+            get
+            {
+                GetPosition();
+                return _x;
+            }
+            set
+            {
+                _x = value;
+                SetPosition();
+            }
+        }
+
+        public int Top
+        {
+            get
+            {
+                GetPosition();
+                return _y;
+            }
+            set
+            {
+                _y = value;
+                SetPosition();
+            }
+        }
+
+        public Point Location
+        {
+            get
+            {
+                GetPosition();
+                return new Point(_x, _y);
+            }
+            set
+            {
+                _x = value.X;
+                _y = value.Y;
+                SetPosition();
             }
         }
     }
