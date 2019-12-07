@@ -227,12 +227,12 @@ void WebWindow::SetSize(int width, int height)
 
 void WebWindow::GetPosition(int* x, int* y)
 {
-	gtk_window_get_pos((GtkWindow*)_window, x, y);
+	gtk_window_get_position((GtkWindow*)_window, x, y);
 }
 
 void WebWindow::SetPosition(int x, int y)
 {
-	gtk_window_move((GtkWindow*), _window, x, y);
+	gtk_window_move((GtkWindow*)_window, x, y);
 }
 
 #endif
