@@ -3,6 +3,7 @@
 @inject WebWindow Window
 
 <h1>Window properties</h1>
+<button class="btn btn-primary" @onclick="StateHasChanged">Refresh</button>
 <h2>Screen size</h2>
 <p>Width: @Window.ScreenSize.Width, Height: @Window.ScreenSize.Height, DPI: @Window.ScreenDpi</p>
 <h2>Window size</h2>
@@ -39,7 +40,7 @@
     </div>
 </form>
 <h2>Icon</h2>
-<div class="form-row">
+<div>
     <div class="col form-group">
         <label for="inputIcon">Icon file</label>
         <input type="text" class="form-control" id="inputIcon" @bind="@iconFilename" />

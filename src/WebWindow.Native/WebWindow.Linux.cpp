@@ -37,6 +37,9 @@ WebWindow::WebWindow(AutoString title, WebWindow* parent, WebMessageReceivedCall
 		g_signal_connect(G_OBJECT(_window), "destroy",
 			G_CALLBACK(+[](GtkWidget* w, gpointer arg) { gtk_main_quit(); }),
 			this);
+		g_signal_connect(G_OBJECT(_window), "size-allocate",
+			G_CALLBACK(+on_size_allocate),
+			this);
 	}
 }
 
@@ -233,6 +236,13 @@ void WebWindow::SetSize(int width, int height)
 	gtk_window_resize(GTK_WINDOW(_window), width, height);
 }
 
+void on_size_allocate(GtkWidget* widget, GdkRectangle* allocation, gpointer self)
+{
+	int width, height;
+	gtk_window_get_size(GTK_WINDOW(widget), &width, &height);
+	((WebWindow*)self)->InvokeResized(width, height);
+}
+
 void WebWindow::GetScreenSize(int* width, int* height)
 {
 	GdkScreen* screen = gtk_window_get_screen(GTK_WINDOW(_window));
@@ -256,6 +266,15 @@ void WebWindow::GetPosition(int* x, int* y)
 void WebWindow::SetPosition(int x, int y)
 {
 	gtk_window_move(GTK_WINDOW(_window), x, y);
+}
+
+gboolean on_configure_event(GtkWidget* widget, GdkEvent* event, gpointer self)
+{
+	if (event->type == GDK_CONFIGURE)
+	{
+		((WebWindow*)self)->InvokeMoved(event->configure.x, event->configure.y);
+	}
+	return FALSE;
 }
 
 void WebWindow::SetTopmost(bool topmost)
