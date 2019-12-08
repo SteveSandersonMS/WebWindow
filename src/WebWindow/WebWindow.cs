@@ -43,6 +43,7 @@ namespace WebWindows
         [DllImport(DllName)] static extern void WebWindow_SetTopmost(IntPtr instance, int topmost);
 
         private List<GCHandle> _gcHandlesToFree = new List<GCHandle>();
+        private List<IntPtr> _hGlobalToFree = new List<IntPtr>();
         private IntPtr _nativeWebWindow;
         private string _title;
 
@@ -105,6 +106,11 @@ namespace WebWindows
                 gcHandle.Free();
             }
             _gcHandlesToFree.Clear();
+            foreach (var handle in _hGlobalToFree)
+            {
+                Marshal.FreeHGlobal(handle);
+            }
+            _hGlobalToFree.Clear();
             WebWindow_dtor(_nativeWebWindow);
         }
 
@@ -217,6 +223,7 @@ namespace WebWindows
                     numBytes = (int)ms.Position;
                     var buffer = Marshal.AllocHGlobal(numBytes);
                     Marshal.Copy(ms.GetBuffer(), 0, buffer, numBytes);
+                    _hGlobalToFree.Add(buffer);
                     return buffer;
                 }
             };
