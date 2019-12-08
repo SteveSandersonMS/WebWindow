@@ -377,6 +377,6 @@ namespace WebWindows
             }
         }
 
-        public void SetIconFile(string filename) => WebWindow_SetIconFile(_nativeWebWindow, filename);
+        public void SetIconFile(string filename) => WebWindow_SetIconFile(_nativeWebWindow, Path.GetFullPath(filename));
     }
 }

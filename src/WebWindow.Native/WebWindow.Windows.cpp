@@ -363,6 +363,9 @@ void WebWindow::SetTopmost(bool topmost)
 
 void WebWindow::SetIconFile(AutoString filename)
 {
-	HICON icon = (HICON)LoadImage(NULL, filename, IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_SHARED);
-	SetWindowLongPtr(_hWnd, GCLP_HICON, (LONG_PTR)icon);
+	HICON icon = (HICON)LoadImage(NULL, filename, IMAGE_ICON, 0, 0, LR_LOADFROMFILE);
+	if (icon)
+	{
+		::SendMessage(_hWnd, WM_SETICON, ICON_SMALL, (LPARAM)icon);
+	}
 }
