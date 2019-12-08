@@ -80,6 +80,11 @@ extern "C"
 		instance->AddCustomScheme(scheme, requestHandler);
 	}
 
+	EXPORTED void WebWindow_SetResizable(WebWindow* instance, int resizable)
+	{
+		instance->SetResizable(resizable);
+	}
+
 	EXPORTED void WebWindow_GetSize(WebWindow* instance, int* width, int* height)
 	{
 		instance->GetSize(width, height);

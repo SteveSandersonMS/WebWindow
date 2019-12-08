@@ -179,6 +179,13 @@ void WebWindow::AddCustomScheme(UTF8String scheme, WebResourceRequestedCallback 
     [webviewConfiguration setURLSchemeHandler:schemeHandler forURLScheme:nsscheme];
 }
 
+void WebWindow::SetResizable(bool resizable)
+{
+    NSWindow* window = (NSWindow*)_window;
+    if (resizable) window.styleMask |= NSWindowStyleMaskResizable;
+    else window.styleMask &= ~NSWindowStyleMaskResizable;
+}
+
 void WebWindow::GetSize(int* width, int* height)
 {
     NSWindow* window = (NSWindow*)_window;
