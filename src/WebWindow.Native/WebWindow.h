@@ -14,7 +14,6 @@ typedef const wchar_t* AutoString;
 #include <gtk/gtk.h>
 #endif
 typedef char* AutoString;
-typedef AutoString UTF8String;
 #endif
 
 typedef void (*ACTION)();

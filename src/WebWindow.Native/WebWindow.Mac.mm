@@ -29,7 +29,7 @@ void WebWindow::Register()
     [application setDelegate:appDelegate];
 }
 
-WebWindow::WebWindow(UTF8String title, WebWindow* parent, WebMessageReceivedCallback webMessageReceivedCallback)
+WebWindow::WebWindow(AutoString title, WebWindow* parent, WebMessageReceivedCallback webMessageReceivedCallback)
 {
     _webMessageReceivedCallback = webMessageReceivedCallback;
     NSRect frame = NSMakeRect(0, 0, 900, 600);
@@ -107,7 +107,7 @@ void WebWindow::Show()
     [window makeKeyAndOrderFront:nil];
 }
 
-void WebWindow::SetTitle(UTF8String title)
+void WebWindow::SetTitle(AutoString title)
 {
     NSWindow* window = (NSWindow*)_window;
     NSString* nstitle = [[NSString stringWithUTF8String:title] autorelease];
@@ -126,7 +126,7 @@ void WebWindow::Invoke(ACTION callback)
     });
 }
 
-void WebWindow::ShowMessage(UTF8String title, UTF8String body, unsigned int type)
+void WebWindow::ShowMessage(AutoString title, AutoString body, unsigned int type)
 {
     NSString* nstitle = [[NSString stringWithUTF8String:title] autorelease];
     NSString* nsbody= [[NSString stringWithUTF8String:body] autorelease];
@@ -136,14 +136,14 @@ void WebWindow::ShowMessage(UTF8String title, UTF8String body, unsigned int type
     [alert runModal];
 }
 
-void WebWindow::NavigateToString(UTF8String content)
+void WebWindow::NavigateToString(AutoString content)
 {
     WKWebView *webView = (WKWebView *)_webview;
     NSString* nscontent = [[NSString stringWithUTF8String:content] autorelease];
     [webView loadHTMLString:nscontent baseURL:nil];
 }
 
-void WebWindow::NavigateToUrl(UTF8String url)
+void WebWindow::NavigateToUrl(AutoString url)
 {
     WKWebView *webView = (WKWebView *)_webview;
     NSString* nsurlstring = [[NSString stringWithUTF8String:url] autorelease];
@@ -152,7 +152,7 @@ void WebWindow::NavigateToUrl(UTF8String url)
     [webView loadRequest:nsrequest];
 }
 
-void WebWindow::SendMessage(UTF8String message)
+void WebWindow::SendMessage(AutoString message)
 {
     // JSON-encode the message
     NSString* nsmessage = [NSString stringWithUTF8String:message];
@@ -167,7 +167,7 @@ void WebWindow::SendMessage(UTF8String message)
     [webView evaluateJavaScript:javaScriptToEval completionHandler:nil];
 }
 
-void WebWindow::AddCustomScheme(UTF8String scheme, WebResourceRequestedCallback requestHandler)
+void WebWindow::AddCustomScheme(AutoString scheme, WebResourceRequestedCallback requestHandler)
 {
     // Note that this can only be done *before* the WKWebView is instantiated, so we only let this
     // get called from the options callback in the constructor
