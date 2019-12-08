@@ -95,6 +95,11 @@ extern "C"
 		instance->SetSize(width, height);
 	}
 
+	EXPORTED void WebWindow_SetResizedCallback(WebWindow* instance, ResizedCallback callback)
+	{
+		instance->SetResizedCallback(callback);
+	}
+
 	EXPORTED void WebWindow_GetScreenSize(WebWindow* instance, int* width, int* height)
 	{
 		instance->GetScreenSize(width, height);
@@ -113,6 +118,11 @@ extern "C"
 	EXPORTED void WebWindow_SetPosition(WebWindow* instance, int x, int y)
 	{
 		instance->SetPosition(x, y);
+	}
+
+	EXPORTED void WebWindow_SetMovedCallback(WebWindow* instance, MovedCallback callback)
+	{
+		instance->SetMovedCallback(callback);
 	}
 
 	EXPORTED void WebWindow_SetTopmost(WebWindow* instance, int topmost)

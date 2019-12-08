@@ -117,6 +117,20 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		if (webWindow)
 		{
 			webWindow->RefitContent();
+			int width, height;
+			webWindow->GetSize(&width, &height);
+			webWindow->InvokeResized(width, height);
+		}
+		return 0;
+	}
+	case WM_MOVE:
+	{
+		WebWindow* webWindow = hwndToWebWindow[hwnd];
+		if (webWindow)
+		{
+			int x, y;
+			webWindow->GetPosition(&x, &y);
+			webWindow->InvokeMoved(x, y);
 		}
 		return 0;
 	}

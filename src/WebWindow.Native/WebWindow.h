@@ -19,11 +19,15 @@ typedef char* AutoString;
 typedef void (*ACTION)();
 typedef void (*WebMessageReceivedCallback)(AutoString message);
 typedef void* (*WebResourceRequestedCallback)(AutoString url, int* outNumBytes, AutoString* outContentType);
+typedef void (*ResizedCallback)(int width, int height);
+typedef void (*MovedCallback)(int x, int y);
 
 class WebWindow
 {
 private:
 	WebMessageReceivedCallback _webMessageReceivedCallback;
+	MovedCallback _movedCallback;
+	ResizedCallback _resizedCallback;
 #ifdef _WIN32
 	static HINSTANCE _hInstance;
 	HWND _hWnd;
@@ -65,10 +69,14 @@ public:
 	void SetResizable(bool resizable);
 	void GetSize(int* width, int* height);
 	void SetSize(int width, int height);
+	void SetResizedCallback(ResizedCallback callback) { _resizedCallback = callback; }
+	void InvokeResized(int width, int height) { if (_resizedCallback) _resizedCallback(width, height); }
 	void GetScreenSize(int* width, int* height);
 	unsigned int GetScreenDpi();
 	void GetPosition(int* x, int* y);
 	void SetPosition(int x, int y);
+	void SetMovedCallback(MovedCallback callback) { _movedCallback = callback; }
+	void InvokeMoved(int x, int y) { if (_movedCallback) _movedCallback(x, y); }
 	void SetTopmost(bool topmost);
 	void SetIconFile(AutoString filename);
 };

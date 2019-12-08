@@ -18,6 +18,8 @@ namespace WebWindows
         [UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Auto)] delegate void OnWebMessageReceivedCallback(string message);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Auto)] delegate IntPtr OnWebResourceRequestedCallback(string url, out int numBytes, out string contentType);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate void InvokeCallback();
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate void ResizedCallback(int width, int height);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate void MovedCallback(int x, int y);
 
         const string DllName = "WebWindow.Native";
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern IntPtr WebWindow_register_win32(IntPtr hInstance);
@@ -37,10 +39,12 @@ namespace WebWindows
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_SetResizable(IntPtr instance, int resizable);
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_GetSize(IntPtr instance, out int width, out int height);
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_SetSize(IntPtr instance, int width, int height);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_SetResizedCallback(IntPtr instance, ResizedCallback callback);
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_GetScreenSize(IntPtr instance, out int width, out int height);
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern uint WebWindow_GetScreenDpi(IntPtr instance);
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_GetPosition(IntPtr instance, out int x, out int y);
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_SetPosition(IntPtr instance, int x, int y);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_SetMovedCallback(IntPtr instance, MovedCallback callback);
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_SetTopmost(IntPtr instance, int topmost);
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Auto)] static extern void WebWindow_SetIconFile(IntPtr instance, string filename);
 
@@ -95,6 +99,14 @@ namespace WebWindows
                 AddCustomScheme(schemeName, handler);
             }
 
+            var onResizedDelegate = (ResizedCallback)OnResized;
+            _gcHandlesToFree.Add(GCHandle.Alloc(onResizedDelegate));
+            WebWindow_SetResizedCallback(_nativeWebWindow, onResizedDelegate);
+
+            var onMovedDelegate = (MovedCallback)OnMoved;
+            _gcHandlesToFree.Add(GCHandle.Alloc(onMovedDelegate));
+            WebWindow_SetMovedCallback(_nativeWebWindow, onMovedDelegate);
+
             // Auto-show to simplify the API, but more importantly because you can't
             // do things like navigate until it has been shown
             Show();
@@ -103,6 +115,8 @@ namespace WebWindows
         ~WebWindow()
         {
             // TODO: IDisposable
+            WebWindow_SetResizedCallback(_nativeWebWindow, null);
+            WebWindow_SetMovedCallback(_nativeWebWindow, null);
             foreach (var gcHandle in _gcHandlesToFree)
             {
                 gcHandle.Free();
@@ -265,8 +279,11 @@ namespace WebWindows
             set
             {
                 GetSize();
-                _width = value;
-                SetSize();
+                if (_width != value)
+                {
+                    _width = value;
+                    SetSize();
+                }
             }
         }
 
@@ -280,8 +297,11 @@ namespace WebWindows
             set
             {
                 GetSize();
-                _height = value;
-                SetSize();
+                if (_height != value)
+                {
+                    _height = value;
+                    SetSize();
+                }
             }
         }
 
@@ -294,11 +314,18 @@ namespace WebWindows
             }
             set
             {
-                _width = value.Width;
-                _height = value.Height;
-                SetSize();
+                if (_width != value.Width || _height != value.Height)
+                {
+                    _width = value.Width;
+                    _height = value.Height;
+                    SetSize();
+                }
             }
         }
+
+        private void OnResized(int width, int height) => SizeChanged?.Invoke(this, new Size(width, height));
+
+        public event EventHandler<Size> SizeChanged;
 
         private int _x;
         private int _y;
@@ -317,8 +344,11 @@ namespace WebWindows
             set
             {
                 GetPosition();
-                _x = value;
-                SetPosition();
+                if (_x != value)
+                {
+                    _x = value;
+                    SetPosition();
+                }
             }
         }
 
@@ -332,8 +362,11 @@ namespace WebWindows
             set
             {
                 GetPosition();
-                _y = value;
-                SetPosition();
+                if (_y != value)
+                {
+                    _y = value;
+                    SetPosition();
+                }
             }
         }
 
@@ -346,11 +379,18 @@ namespace WebWindows
             }
             set
             {
-                _x = value.X;
-                _y = value.Y;
-                SetPosition();
+                if (_x != value.X || _y != value.Y)
+                {
+                    _x = value.X;
+                    _y = value.Y;
+                    SetPosition();
+                }
             }
         }
+
+        private void OnMoved(int x, int y) => LocationChanged?.Invoke(this, new Point(x, y));
+
+        public event EventHandler<Point> LocationChanged;
 
         public Size ScreenSize
         {
