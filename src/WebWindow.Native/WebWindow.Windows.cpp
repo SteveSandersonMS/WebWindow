@@ -358,5 +358,5 @@ void WebWindow::SetPosition(int x, int y)
 
 void WebWindow::SetTopmost(bool topmost)
 {
-	SetWindowPos(_hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+	SetWindowPos(_hWnd, topmost ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
 }
