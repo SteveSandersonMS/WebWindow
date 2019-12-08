@@ -21,18 +21,18 @@ namespace WebWindows
         const string DllName = "WebWindow.Native";
         [DllImport(DllName)] static extern IntPtr WebWindow_register_win32(IntPtr hInstance);
         [DllImport(DllName)] static extern IntPtr WebWindow_register_mac();
-        [DllImport(DllName, CharSet = CharSet.Auto)] static extern IntPtr WebWindow_ctor(string title, IntPtr parentWebWindow, IntPtr webMessageReceivedCallback);
+        [DllImport(DllName, CharSet = CharSet.Auto)] static extern IntPtr WebWindow_ctor(string title, IntPtr parentWebWindow, OnWebMessageReceivedCallback webMessageReceivedCallback);
         [DllImport(DllName)] static extern void WebWindow_dtor(IntPtr instance);
         [DllImport(DllName)] static extern IntPtr WebWindow_getHwnd_win32(IntPtr instance);
         [DllImport(DllName, CharSet = CharSet.Auto)] static extern void WebWindow_SetTitle(IntPtr instance, string title);
         [DllImport(DllName)] static extern void WebWindow_Show(IntPtr instance);
         [DllImport(DllName)] static extern void WebWindow_WaitForExit(IntPtr instance);
-        [DllImport(DllName)] static extern void WebWindow_Invoke(IntPtr instance, IntPtr callback);
+        [DllImport(DllName)] static extern void WebWindow_Invoke(IntPtr instance, Action callback);
         [DllImport(DllName, CharSet = CharSet.Auto)] static extern void WebWindow_NavigateToString(IntPtr instance, string content);
         [DllImport(DllName, CharSet = CharSet.Auto)] static extern void WebWindow_NavigateToUrl(IntPtr instance, string url);
         [DllImport(DllName, CharSet = CharSet.Auto)] static extern void WebWindow_ShowMessage(IntPtr instance, string title, string body, uint type);
         [DllImport(DllName, CharSet = CharSet.Auto)] static extern void WebWindow_SendMessage(IntPtr instance, string message);
-        [DllImport(DllName, CharSet = CharSet.Auto)] static extern void WebWindow_AddCustomScheme(IntPtr instance, string scheme, IntPtr requestHandler);
+        [DllImport(DllName, CharSet = CharSet.Auto)] static extern void WebWindow_AddCustomScheme(IntPtr instance, string scheme, OnWebResourceRequestedCallback requestHandler);
         [DllImport(DllName)] static extern void WebWindow_SetResizable(IntPtr instance, int resizable);
         [DllImport(DllName)] static extern void WebWindow_GetSize(IntPtr instance, out int width, out int height);
         [DllImport(DllName)] static extern void WebWindow_SetSize(IntPtr instance, int width, int height);
@@ -83,10 +83,9 @@ namespace WebWindows
 
             var onWebMessageReceivedDelegate = (OnWebMessageReceivedCallback)ReceiveWebMessage;
             _gcHandlesToFree.Add(GCHandle.Alloc(onWebMessageReceivedDelegate));
-            var onWebMessageReceivedPtr = Marshal.GetFunctionPointerForDelegate(onWebMessageReceivedDelegate);
 
             var parentPtr = options.Parent?._nativeWebWindow ?? default;
-            _nativeWebWindow = WebWindow_ctor(_title, parentPtr, onWebMessageReceivedPtr);
+            _nativeWebWindow = WebWindow_ctor(_title, parentPtr, onWebMessageReceivedDelegate);
 
             foreach (var (schemeName, handler) in options.SchemeHandlers)
             {
@@ -129,9 +128,7 @@ namespace WebWindows
 
         public void Invoke(Action workItem)
         {
-            var fnPtr = Marshal.GetFunctionPointerForDelegate(workItem);
-            WebWindow_Invoke(_nativeWebWindow, fnPtr);
-            GC.KeepAlive(fnPtr);
+            WebWindow_Invoke(_nativeWebWindow, workItem);
         }
 
         public IntPtr Hwnd
@@ -225,9 +222,7 @@ namespace WebWindows
             };
 
             _gcHandlesToFree.Add(GCHandle.Alloc(callback));
-
-            var callbackPtr = Marshal.GetFunctionPointerForDelegate(callback);
-            WebWindow_AddCustomScheme(_nativeWebWindow, scheme, callbackPtr);
+            WebWindow_AddCustomScheme(_nativeWebWindow, scheme, callback);
         }
 
         private bool _resizable = true;
