@@ -41,6 +41,7 @@ namespace WebWindows
         [DllImport(DllName)] static extern void WebWindow_GetPosition(IntPtr instance, out int x, out int y);
         [DllImport(DllName)] static extern void WebWindow_SetPosition(IntPtr instance, int x, int y);
         [DllImport(DllName)] static extern void WebWindow_SetTopmost(IntPtr instance, int topmost);
+        [DllImport(DllName, CharSet = CharSet.Auto)] static extern void WebWindow_SetIconFile(IntPtr instance, string filename);
 
         private List<GCHandle> _gcHandlesToFree = new List<GCHandle>();
         private List<IntPtr> _hGlobalToFree = new List<IntPtr>();
@@ -374,5 +375,7 @@ namespace WebWindows
                 }
             }
         }
+
+        public void SetIconFile(string filename) => WebWindow_SetIconFile(_nativeWebWindow, filename);
     }
 }

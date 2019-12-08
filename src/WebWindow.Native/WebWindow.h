@@ -73,6 +73,7 @@ public:
 	void GetPosition(int* x, int* y);
 	void SetPosition(int x, int y);
 	void SetTopmost(bool topmost);
+	void SetIconFile(AutoString filename);
 };
 
 #endif // !WEBWINDOW_H

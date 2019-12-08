@@ -360,3 +360,9 @@ void WebWindow::SetTopmost(bool topmost)
 {
 	SetWindowPos(_hWnd, topmost ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
 }
+
+void WebWindow::SetIconFile(AutoString filename)
+{
+	HICON icon = (HICON)LoadImage(NULL, filename, IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_SHARED);
+	SetWindowLongPtr(_hWnd, GCLP_HICON, (LONG_PTR)icon);
+}

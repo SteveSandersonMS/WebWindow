@@ -263,4 +263,9 @@ void WebWindow::SetTopmost(bool topmost)
 	gtk_window_set_keep_above((GtkWindow*)_window, topmost ? TRUE : FALSE);
 }
 
+void WebWindow::SetIconFile(AutoString filename)
+{
+	gtk_window_set_icon_from_file((GtkWindow*)_window, filename, NULL);
+}
+
 #endif

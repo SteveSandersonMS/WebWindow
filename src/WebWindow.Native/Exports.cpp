@@ -119,4 +119,9 @@ extern "C"
 	{
 		instance->SetTopmost(topmost);
 	}
+
+	EXPORTED void WebWindow_SetIconFile(WebWindow* instance, AutoString filename)
+	{
+		instance->SetIconFile(filename);
+	}
 }
