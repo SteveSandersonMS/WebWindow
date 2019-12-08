@@ -33,6 +33,7 @@ namespace WebWindows
         [DllImport(DllName, CharSet = CharSet.Auto)] static extern void WebWindow_ShowMessage(IntPtr instance, string title, string body, uint type);
         [DllImport(DllName, CharSet = CharSet.Auto)] static extern void WebWindow_SendMessage(IntPtr instance, string message);
         [DllImport(DllName, CharSet = CharSet.Auto)] static extern void WebWindow_AddCustomScheme(IntPtr instance, string scheme, IntPtr requestHandler);
+        [DllImport(DllName)] static extern void WebWindow_SetResizable(IntPtr instance, int resizable);
         [DllImport(DllName)] static extern void WebWindow_GetSize(IntPtr instance, out int width, out int height);
         [DllImport(DllName)] static extern void WebWindow_SetSize(IntPtr instance, int width, int height);
         [DllImport(DllName)] static extern void WebWindow_GetScreenSize(IntPtr instance, out int width, out int height);
@@ -229,6 +230,20 @@ namespace WebWindows
             WebWindow_AddCustomScheme(_nativeWebWindow, scheme, callbackPtr);
         }
 
+        private bool _resizable = false;
+        public bool Resizable
+        {
+            get => _resizable;
+            set
+            {
+                if (_resizable != value)
+                {
+                    _resizable = value;
+                    WebWindow_SetResizable(_nativeWebWindow, _resizable ? 1 : 0);
+                }
+            }
+        }
+
         private int _width;
         private int _height;
 
@@ -350,8 +365,11 @@ namespace WebWindows
             get => _topmost;
             set
             {
-                _topmost = value;
-                WebWindow_SetTopmost(_nativeWebWindow, _topmost ? 1 : 0);
+                if (_topmost != value)
+                {
+                    _topmost = value;
+                    WebWindow_SetTopmost(_nativeWebWindow, _topmost ? 1 : 0);
+                }
             }
         }
     }

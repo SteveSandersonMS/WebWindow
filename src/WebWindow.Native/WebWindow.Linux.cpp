@@ -35,9 +35,7 @@ WebWindow::WebWindow(UTF8String title, WebWindow* parent, WebMessageReceivedCall
 	if (parent == NULL)
 	{
 		g_signal_connect(G_OBJECT(_window), "destroy",
-			G_CALLBACK(+[](GtkWidget* w, gpointer arg) {
-				gtk_main_quit();
-			}),
+			G_CALLBACK(+[](GtkWidget* w, gpointer arg) { gtk_main_quit(); }),
 			this);
 	}
 }
@@ -218,6 +216,11 @@ void WebWindow::AddCustomScheme(UTF8String scheme, WebResourceRequestedCallback 
 	webkit_web_context_register_uri_scheme(context, scheme,
 		(WebKitURISchemeRequestCallback)HandleCustomSchemeRequest,
 		(void*)requestHandler, NULL);
+}
+
+void WebWindow::SetResizable(bool resizable)
+{
+	gtk_window_set_resizable((GtkWindow*)_window, resizable ? TRUE : FALSE);
 }
 
 void WebWindow::GetSize(int* width, int* height)

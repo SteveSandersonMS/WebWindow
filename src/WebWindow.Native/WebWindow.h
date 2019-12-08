@@ -65,6 +65,7 @@ public:
 	void NavigateToString(AutoString content);
 	void SendMessage(AutoString message);
 	void AddCustomScheme(AutoString scheme, WebResourceRequestedCallback requestHandler);
+	void SetResizable(bool resizable);
 	void GetSize(int* width, int* height);
 	void SetSize(int width, int height);
 	void GetScreenSize(int* width, int* height);

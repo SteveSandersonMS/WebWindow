@@ -309,6 +309,14 @@ void WebWindow::AddCustomScheme(AutoString scheme, WebResourceRequestedCallback 
 	_schemeToRequestHandler[scheme] = requestHandler;
 }
 
+void WebWindow::SetResizable(bool resizable)
+{
+	LONG_PTR style = GetWindowLongPtr(_hWnd, GWL_STYLE);
+	if (resizable) style |= WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
+	else style &= (~WS_THICKFRAME) & (~WS_MINIMIZEBOX) & (~WS_MAXIMIZEBOX);
+	SetWindowLongPtr(_hWnd, GWL_STYLE, style);
+}
+
 void WebWindow::GetSize(int* width, int* height)
 {
 	RECT rect = {};
