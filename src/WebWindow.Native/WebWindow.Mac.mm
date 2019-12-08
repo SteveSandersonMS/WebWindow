@@ -245,4 +245,15 @@ void WebWindow::SetTopmost(bool topmost)
     else [window setLevel:NSNormalWindowLevel];
 }
 
+void WebWindow::SetIconFile(AutoString filename)
+{
+	NSString* path = [[NSString stringWithUTF8String:filename] autorelease];
+    NSImage* icon = [[NSImage alloc] initWithContentsOfFile:path];
+    if (icon != nil)
+    {
+        NSWindow* window = (NSWindow*)_window;
+        [[window standardWindowButton:NSWindowDocumentIconButton] setImage:icon];
+    }
+}
+
 #endif
