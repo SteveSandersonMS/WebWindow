@@ -1,0 +1,15 @@
+﻿@page "/size"
+@inject WebWindow Window
+
+<h1>Size demo</h1>
+<h2>Screen size</h2>
+<p>Width: @Window.ScreenSize.Width, Height: @Window.ScreenSize.Height, DPI: @Window.ScreenDpi</p>
+<h2>Window size</h2>
+<p>Width: @Window.Width, Height: @Window.Height</p>
+<h2>Window location</h2>
+<p>Left: @Window.Left, Top: @Window.Top</p>
+<h2>Window properties</h2>
+<input type="checkbox" class="form-check-input" @bind="@Window.Resizable" />Resizable
+<br />
+<input type="checkbox" class="form-check-input" @bind="@Window.Topmost" />Topmost
+<br />

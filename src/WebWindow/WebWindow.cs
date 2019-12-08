@@ -230,7 +230,7 @@ namespace WebWindows
             WebWindow_AddCustomScheme(_nativeWebWindow, scheme, callbackPtr);
         }
 
-        private bool _resizable = false;
+        private bool _resizable = true;
         public bool Resizable
         {
             get => _resizable;

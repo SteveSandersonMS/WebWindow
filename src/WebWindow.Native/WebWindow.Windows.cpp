@@ -333,7 +333,7 @@ void WebWindow::SetSize(int width, int height)
 void WebWindow::GetScreenSize(int* width, int* height)
 {
 	RECT rect = {};
-	GetWindowRect(HWND_DESKTOP, &rect);
+	GetWindowRect(GetDesktopWindow(), &rect);
 	if (width) *width = rect.right - rect.left;
 	if (height) *height = rect.bottom - rect.top;
 }
