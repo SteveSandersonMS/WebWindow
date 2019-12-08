@@ -8,20 +8,18 @@
 #include <string>
 #include <wil/com.h>
 #include <WebView2.h>
-#define WEBWINDOW_STDCALL __stdcall
 typedef const wchar_t* AutoString;
 #else
 #ifdef OS_LINUX
 #include <gtk/gtk.h>
 #endif
-#define WEBWINDOW_STDCALL
 typedef char* AutoString;
 typedef AutoString UTF8String;
 #endif
 
-typedef void (WEBWINDOW_STDCALL* ACTION)();
-typedef void (WEBWINDOW_STDCALL* WebMessageReceivedCallback)(AutoString message);
-typedef void* (WEBWINDOW_STDCALL* WebResourceRequestedCallback)(AutoString url, int* outNumBytes, AutoString* outContentType);
+typedef void (*ACTION)();
+typedef void (*WebMessageReceivedCallback)(AutoString message);
+typedef void* (*WebResourceRequestedCallback)(AutoString url, int* outNumBytes, AutoString* outContentType);
 
 class WebWindow
 {
