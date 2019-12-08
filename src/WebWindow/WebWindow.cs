@@ -17,31 +17,32 @@ namespace WebWindows
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Auto)] delegate void OnWebMessageReceivedCallback(string message);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Auto)] delegate IntPtr OnWebResourceRequestedCallback(string url, out int numBytes, out string contentType);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate void InvokeCallback();
 
         const string DllName = "WebWindow.Native";
-        [DllImport(DllName)] static extern IntPtr WebWindow_register_win32(IntPtr hInstance);
-        [DllImport(DllName)] static extern IntPtr WebWindow_register_mac();
-        [DllImport(DllName, CharSet = CharSet.Auto)] static extern IntPtr WebWindow_ctor(string title, IntPtr parentWebWindow, OnWebMessageReceivedCallback webMessageReceivedCallback);
-        [DllImport(DllName)] static extern void WebWindow_dtor(IntPtr instance);
-        [DllImport(DllName)] static extern IntPtr WebWindow_getHwnd_win32(IntPtr instance);
-        [DllImport(DllName, CharSet = CharSet.Auto)] static extern void WebWindow_SetTitle(IntPtr instance, string title);
-        [DllImport(DllName)] static extern void WebWindow_Show(IntPtr instance);
-        [DllImport(DllName)] static extern void WebWindow_WaitForExit(IntPtr instance);
-        [DllImport(DllName)] static extern void WebWindow_Invoke(IntPtr instance, Action callback);
-        [DllImport(DllName, CharSet = CharSet.Auto)] static extern void WebWindow_NavigateToString(IntPtr instance, string content);
-        [DllImport(DllName, CharSet = CharSet.Auto)] static extern void WebWindow_NavigateToUrl(IntPtr instance, string url);
-        [DllImport(DllName, CharSet = CharSet.Auto)] static extern void WebWindow_ShowMessage(IntPtr instance, string title, string body, uint type);
-        [DllImport(DllName, CharSet = CharSet.Auto)] static extern void WebWindow_SendMessage(IntPtr instance, string message);
-        [DllImport(DllName, CharSet = CharSet.Auto)] static extern void WebWindow_AddCustomScheme(IntPtr instance, string scheme, OnWebResourceRequestedCallback requestHandler);
-        [DllImport(DllName)] static extern void WebWindow_SetResizable(IntPtr instance, int resizable);
-        [DllImport(DllName)] static extern void WebWindow_GetSize(IntPtr instance, out int width, out int height);
-        [DllImport(DllName)] static extern void WebWindow_SetSize(IntPtr instance, int width, int height);
-        [DllImport(DllName)] static extern void WebWindow_GetScreenSize(IntPtr instance, out int width, out int height);
-        [DllImport(DllName)] static extern uint WebWindow_GetScreenDpi(IntPtr instance);
-        [DllImport(DllName)] static extern void WebWindow_GetPosition(IntPtr instance, out int x, out int y);
-        [DllImport(DllName)] static extern void WebWindow_SetPosition(IntPtr instance, int x, int y);
-        [DllImport(DllName)] static extern void WebWindow_SetTopmost(IntPtr instance, int topmost);
-        [DllImport(DllName, CharSet = CharSet.Auto)] static extern void WebWindow_SetIconFile(IntPtr instance, string filename);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern IntPtr WebWindow_register_win32(IntPtr hInstance);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern IntPtr WebWindow_register_mac();
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Auto)] static extern IntPtr WebWindow_ctor(string title, IntPtr parentWebWindow, OnWebMessageReceivedCallback webMessageReceivedCallback);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_dtor(IntPtr instance);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern IntPtr WebWindow_getHwnd_win32(IntPtr instance);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Auto)] static extern void WebWindow_SetTitle(IntPtr instance, string title);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_Show(IntPtr instance);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_WaitForExit(IntPtr instance);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_Invoke(IntPtr instance, InvokeCallback callback);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Auto)] static extern void WebWindow_NavigateToString(IntPtr instance, string content);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Auto)] static extern void WebWindow_NavigateToUrl(IntPtr instance, string url);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Auto)] static extern void WebWindow_ShowMessage(IntPtr instance, string title, string body, uint type);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Auto)] static extern void WebWindow_SendMessage(IntPtr instance, string message);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Auto)] static extern void WebWindow_AddCustomScheme(IntPtr instance, string scheme, OnWebResourceRequestedCallback requestHandler);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_SetResizable(IntPtr instance, int resizable);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_GetSize(IntPtr instance, out int width, out int height);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_SetSize(IntPtr instance, int width, int height);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_GetScreenSize(IntPtr instance, out int width, out int height);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern uint WebWindow_GetScreenDpi(IntPtr instance);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_GetPosition(IntPtr instance, out int x, out int y);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_SetPosition(IntPtr instance, int x, int y);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_SetTopmost(IntPtr instance, int topmost);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Auto)] static extern void WebWindow_SetIconFile(IntPtr instance, string filename);
 
         private List<GCHandle> _gcHandlesToFree = new List<GCHandle>();
         private List<IntPtr> _hGlobalToFree = new List<IntPtr>();
@@ -135,7 +136,7 @@ namespace WebWindows
 
         public void Invoke(Action workItem)
         {
-            WebWindow_Invoke(_nativeWebWindow, workItem);
+            WebWindow_Invoke(_nativeWebWindow, workItem.Invoke);
         }
 
         public IntPtr Hwnd
