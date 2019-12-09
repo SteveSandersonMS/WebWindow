@@ -4,6 +4,7 @@
 #include "WebWindow.h"
 #include <mutex>
 #include <condition_variable>
+#include <X11/Xlib.h>
 #include <webkit2/webkit2.h>
 #include <JavaScriptCore/JavaScript.h>
 #include <sstream>
@@ -23,9 +24,16 @@ struct InvokeJSWaitInfo
 	bool isCompleted;
 };
 
-WebWindow::WebWindow(AutoString title, WebWindow* parent, WebMessageReceivedCallback webMessageReceivedCallback)
+void on_size_allocate(GtkWidget* widget, GdkRectangle* allocation, gpointer self);
+gboolean on_configure_event(GtkWidget* widget, GdkEvent* event, gpointer self);
+
+WebWindow::WebWindow(AutoString title, WebWindow* parent, WebMessageReceivedCallback webMessageReceivedCallback) : _webview(nullptr)
 {
 	_webMessageReceivedCallback = webMessageReceivedCallback;
+
+	// It makes xlib thread safe.
+	// Needed for get_position.
+	XInitThreads();
 
 	gtk_init(0, NULL);
 	_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -38,7 +46,10 @@ WebWindow::WebWindow(AutoString title, WebWindow* parent, WebMessageReceivedCall
 			G_CALLBACK(+[](GtkWidget* w, gpointer arg) { gtk_main_quit(); }),
 			this);
 		g_signal_connect(G_OBJECT(_window), "size-allocate",
-			G_CALLBACK(+on_size_allocate),
+			G_CALLBACK(on_size_allocate),
+			this);
+		g_signal_connect(G_OBJECT(_window), "configure-event",
+			G_CALLBACK(on_configure_event),
 			this);
 	}
 }
@@ -245,9 +256,12 @@ void on_size_allocate(GtkWidget* widget, GdkRectangle* allocation, gpointer self
 
 void WebWindow::GetScreenSize(int* width, int* height)
 {
-	GdkScreen* screen = gtk_window_get_screen(GTK_WINDOW(_window));
-	if (width) *width = gdk_screen_get_width(screen);
-	if (height) *height = gdk_screen_get_height(screen);
+	GdkRectangle workarea = {};
+	gdk_monitor_get_workarea(
+		gdk_display_get_primary_monitor(gdk_display_get_default()),
+		&workarea);
+	if (width) *width = workarea.width;
+	if (height) *height = workarea.height;
 }
 
 unsigned int WebWindow::GetScreenDpi()
