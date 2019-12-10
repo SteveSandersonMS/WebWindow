@@ -2,7 +2,7 @@
 #include "WebWindow.h"
 #include <map>
 
-extern map<NSWindow*, WebWindow*> nsWindowToWebWindow;
+extern std::map<NSWindow*, WebWindow*> nsWindowToWebWindow;
 
 @implementation MyApplicationDelegate : NSObject
 - (id)init {
@@ -19,7 +19,7 @@ extern map<NSWindow*, WebWindow*> nsWindowToWebWindow;
 
 - (void)windowDidResize:(NSNotification *)notification {
     NSWindow *window = notification.object;
-    WebWindow* webWindow = nsWindowToWebWindow[hwnd];
+    WebWindow* webWindow = nsWindowToWebWindow[window];
     if (webWindow)
     {
         int width, height;
@@ -30,7 +30,7 @@ extern map<NSWindow*, WebWindow*> nsWindowToWebWindow;
 
 - (void)windowDidMove:(NSNotification *)notification {
     NSWindow *window = notification.object;
-    WebWindow* webWindow = nsWindowToWebWindow[hwnd];
+    WebWindow* webWindow = nsWindowToWebWindow[window];
     if (webWindow)
     {
         int x, y;

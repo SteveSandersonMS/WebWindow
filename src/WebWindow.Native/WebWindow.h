@@ -16,16 +16,13 @@ typedef const wchar_t* AutoString;
 typedef char* AutoString;
 #endif
 
-struct Rect
-{
-	int x, y;
-	int width, height;
-};
-
 struct Monitor
 {
-	Rect monitor;
-	Rect work;
+	struct MonitorRect
+	{
+		int x, y;
+		int width, height;
+	} monitor, work;
 };
 
 typedef void (*ACTION)();
