@@ -100,9 +100,9 @@ extern "C"
 		instance->SetResizedCallback(callback);
 	}
 
-	EXPORTED void WebWindow_GetScreenSize(WebWindow* instance, int* width, int* height)
+	EXPORTED void WebWindow_GetAllMonitors(WebWindow* instance, GetAllMonitorsCallback callback)
 	{
-		instance->GetScreenSize(width, height);
+		instance->GetAllMonitors(callback);
 	}
 
 	EXPORTED unsigned int WebWindow_GetScreenDpi(WebWindow* instance)

@@ -16,9 +16,22 @@ typedef const wchar_t* AutoString;
 typedef char* AutoString;
 #endif
 
+struct Rect
+{
+	int x, y;
+	int width, height;
+};
+
+struct Monitor
+{
+	Rect monitor;
+	Rect work;
+};
+
 typedef void (*ACTION)();
 typedef void (*WebMessageReceivedCallback)(AutoString message);
 typedef void* (*WebResourceRequestedCallback)(AutoString url, int* outNumBytes, AutoString* outContentType);
+typedef int (*GetAllMonitorsCallback)(const Monitor* monitor);
 typedef void (*ResizedCallback)(int width, int height);
 typedef void (*MovedCallback)(int x, int y);
 
@@ -71,7 +84,7 @@ public:
 	void SetSize(int width, int height);
 	void SetResizedCallback(ResizedCallback callback) { _resizedCallback = callback; }
 	void InvokeResized(int width, int height) { if (_resizedCallback) _resizedCallback(width, height); }
-	void GetScreenSize(int* width, int* height);
+	void GetAllMonitors(GetAllMonitorsCallback callback);
 	unsigned int GetScreenDpi();
 	void GetPosition(int* x, int* y);
 	void SetPosition(int x, int y);

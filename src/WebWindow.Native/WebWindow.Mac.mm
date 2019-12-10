@@ -208,12 +208,26 @@ void WebWindow::SetSize(int width, int height)
     [window setFrame: frame display: YES];
 }
 
-void WebWindow::GetScreenSize(int* width, int* height)
+void WebWindow::GetAllMonitors(GetAllMonitorsCallback callback)
 {
-    NSWindow* window = (NSWindow*)_window;
-    NSSize size = [[window screen] frame].size;
-    if (width) *width = (int)roundf(size.width);
-    if (height) *height = (int)roundf(size.height);
+    if (callback)
+    {
+        for (NSScreen* screen in [NSScreen screens])
+        {
+            Monitor props = {};
+            NSRect frame = [screen frame];
+            props.monitor.x = (int)roundf(frame.origin.x);
+            props.monitor.y = (int)roundf(frame.origin.y);
+            props.monitor.width = (int)roundf(frame.size.width);
+            props.monitor.height = (int)roundf(frame.size.height);
+            NSRect vframe = [screen visibleFrame];
+            props.work.x = (int)roundf(vframe.origin.x);
+            props.work.y = (int)roundf(vframe.origin.y);
+            props.work.width = (int)roundf(vframe.size.width);
+            props.work.height = (int)roundf(vframe.size.height);
+            callback(&props);
+        }
+    }
 }
 
 unsigned int WebWindow::GetScreenDpi()

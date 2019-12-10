@@ -254,14 +254,22 @@ void on_size_allocate(GtkWidget* widget, GdkRectangle* allocation, gpointer self
 	((WebWindow*)self)->InvokeResized(width, height);
 }
 
-void WebWindow::GetScreenSize(int* width, int* height)
+void WebWindow::GetAllMonitors(GetAllMonitorsCallback callback)
 {
-	GdkRectangle workarea = {};
-	gdk_monitor_get_workarea(
-		gdk_display_get_primary_monitor(gdk_display_get_default()),
-		&workarea);
-	if (width) *width = workarea.width;
-	if (height) *height = workarea.height;
+    if (callback)
+    {
+        GdkScreen* screen = gtk_window_get_screen(GTK_WINDOW(_window));
+        GdkDisplay* display = gdk_screen_get_display(screen);
+        int n = gdk_display_get_n_monitors(display);
+        for (int i = 0; i < n; i++)
+        {
+            GdkMonitor* monitor = gdk_display_get_monitor(display, i);
+            Monitor props = {};
+            gdk_monitor_get_geometry(monitor, (GdkRectangle*)&props.monitor);
+            gdk_monitor_get_workarea(monitor, (GdkRectangle*)&props.work);
+            if (!callback(&props)) break;
+        }
+    }
 }
 
 unsigned int WebWindow::GetScreenDpi()
