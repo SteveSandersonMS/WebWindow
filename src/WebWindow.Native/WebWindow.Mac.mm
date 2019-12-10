@@ -3,9 +3,14 @@
 #import "WebWindow.Mac.AppDelegate.h"
 #import "WebWindow.Mac.UiDelegate.h"
 #import "WebWindow.Mac.UrlSchemeHandler.h"
-#include <stdio.h>
+#include <cstdio>
+#include <map>
 #import <Cocoa/Cocoa.h>
 #import <WebKit/WebKit.h>
+
+using namespace std;
+
+map<NSWindow*, WebWindow*> nsWindowToWebWindow;
 
 void WebWindow::Register()
 {
@@ -57,7 +62,6 @@ WebWindow::~WebWindow()
     [webView release];
     NSWindow* window = (NSWindow*)_window;
     [window close];
-    [window release];
 }
 
 void WebWindow::AttachWebView()
