@@ -5,7 +5,11 @@
 <h1>Window properties</h1>
 <button class="btn btn-primary" @onclick="StateHasChanged">Refresh</button>
 <h2>Screen size</h2>
-<p>Width: @Window.ScreenSize.Width, Height: @Window.ScreenSize.Height, DPI: @Window.ScreenDpi</p>
+<p>DPI: @Window.ScreenDpi</p>
+@foreach (var (m, i) in Window.Monitors.Select((monitor, index) => (monitor, index)))
+{
+    <p>Monitor @i: Width: @m.MonitorArea.Width, Height: @m.MonitorArea.Height</p>
+}
 <h2>Window size</h2>
 <form class="form-row">
     <div class="col form-group">

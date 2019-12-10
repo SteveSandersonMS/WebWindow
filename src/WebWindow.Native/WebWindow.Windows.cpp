@@ -344,12 +344,30 @@ void WebWindow::SetSize(int width, int height)
 	SetWindowPos(_hWnd, HWND_TOP, 0, 0, width, height, SWP_NOMOVE | SWP_NOZORDER);
 }
 
-void WebWindow::GetScreenSize(int* width, int* height)
+BOOL MonitorEnum(HMONITOR monitor, HDC, LPRECT, LPARAM arg)
 {
-	RECT rect = {};
-	GetWindowRect(GetDesktopWindow(), &rect);
-	if (width) *width = rect.right - rect.left;
-	if (height) *height = rect.bottom - rect.top;
+	auto callback = (GetAllMonitorsCallback)arg;
+	MONITORINFO info = {};
+	info.cbSize = sizeof(MONITORINFO);
+	GetMonitorInfo(monitor, &info);
+	Monitor props = {};
+	props.monitor.x = info.rcMonitor.left;
+	props.monitor.y = info.rcMonitor.top;
+	props.monitor.width = info.rcMonitor.right - info.rcMonitor.left;
+	props.monitor.height = info.rcMonitor.bottom - info.rcMonitor.top;
+	props.work.x = info.rcWork.left;
+	props.work.y = info.rcWork.top;
+	props.work.width = info.rcWork.right - info.rcWork.left;
+	props.work.height = info.rcWork.bottom - info.rcWork.top;
+	return callback(&props) ? TRUE : FALSE;
+}
+
+void WebWindow::GetAllMonitors(GetAllMonitorsCallback callback)
+{
+	if (callback)
+	{
+		EnumDisplayMonitors(NULL, NULL, MonitorEnum, (LPARAM)callback);
+	}
 }
 
 unsigned int WebWindow::GetScreenDpi()

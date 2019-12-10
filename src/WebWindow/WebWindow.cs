@@ -7,6 +7,40 @@ using System.Threading;
 
 namespace WebWindows
 {
+    [StructLayout(LayoutKind.Sequential)]
+    struct NativeRect
+    {
+        public int x, y;
+        public int width, height;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    struct NativeMonitor
+    {
+        public NativeRect monitor;
+        public NativeRect work;
+    }
+
+    public readonly struct Monitor
+    {
+        public readonly Rectangle MonitorArea;
+        public readonly Rectangle WorkArea;
+
+        public Monitor(Rectangle monitor, Rectangle work)
+        {
+            MonitorArea = monitor;
+            WorkArea = work;
+        }
+
+        internal Monitor(NativeRect monitor, NativeRect work)
+            : this(new Rectangle(monitor.x, monitor.y, monitor.width, monitor.height), new Rectangle(work.x, work.y, work.width, work.height))
+        { }
+
+        internal Monitor(NativeMonitor nativeMonitor)
+            : this(nativeMonitor.monitor, nativeMonitor.work)
+        { }
+    }
+
     public class WebWindow
     {
         // Here we use auto charset instead of forcing UTF-8.
@@ -18,6 +52,7 @@ namespace WebWindows
         [UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Auto)] delegate void OnWebMessageReceivedCallback(string message);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Auto)] delegate IntPtr OnWebResourceRequestedCallback(string url, out int numBytes, out string contentType);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate void InvokeCallback();
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate int GetAllMonitorsCallback(in NativeMonitor monitor);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate void ResizedCallback(int width, int height);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate void MovedCallback(int x, int y);
 
@@ -40,7 +75,7 @@ namespace WebWindows
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_GetSize(IntPtr instance, out int width, out int height);
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_SetSize(IntPtr instance, int width, int height);
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_SetResizedCallback(IntPtr instance, ResizedCallback callback);
-        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_GetScreenSize(IntPtr instance, out int width, out int height);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_GetAllMonitors(IntPtr instance, GetAllMonitorsCallback callback);
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern uint WebWindow_GetScreenDpi(IntPtr instance);
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_GetPosition(IntPtr instance, out int x, out int y);
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_SetPosition(IntPtr instance, int x, int y);
@@ -392,12 +427,18 @@ namespace WebWindows
 
         public event EventHandler<Point> LocationChanged;
 
-        public Size ScreenSize
+        public IEnumerable<Monitor> Monitors
         {
             get
             {
-                WebWindow_GetScreenSize(_nativeWebWindow, out int width, out int height);
-                return new Size(width, height);
+                List<Monitor> monitors = new List<Monitor>();
+                int callback(in NativeMonitor monitor)
+                {
+                    monitors.Add(new Monitor(monitor));
+                    return 1;
+                }
+                WebWindow_GetAllMonitors(_nativeWebWindow, callback);
+                return monitors;
             }
         }
 
