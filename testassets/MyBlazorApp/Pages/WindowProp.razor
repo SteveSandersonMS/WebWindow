@@ -1,9 +1,7 @@
 ﻿@page "/window"
-@using System.IO
 @inject WebWindow Window
 
 <h1>Window properties</h1>
-<button class="btn btn-primary" @onclick="StateHasChanged">Refresh</button>
 <h2>Screen size</h2>
 <p>DPI: @Window.ScreenDpi</p>
 @foreach (var (m, i) in Window.Monitors.Select((monitor, index) => (monitor, index)))
@@ -55,6 +53,12 @@
 </div>
 
 @code {
+    protected override void OnInitialized()
+    {
+        Window.SizeChanged += async (sender, e) => await Task.Run(StateHasChanged);
+        Window.LocationChanged += async (sender, e) => await Task.Run(StateHasChanged);
+    }
+
     string iconFilename;
 
     void ChangeIconFile()

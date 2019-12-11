@@ -41,7 +41,7 @@ void WebWindow::Register(HINSTANCE hInstance)
 	wc.lpfnWndProc = WindowProc;
 	wc.hInstance = hInstance;
 	wc.lpszClassName = CLASS_NAME;
-	RegisterClassW(&wc);
+	RegisterClass(&wc);
 
 	SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE);
 }
@@ -51,7 +51,7 @@ WebWindow::WebWindow(AutoString title, WebWindow* parent, WebMessageReceivedCall
 	// Create the window
 	_webMessageReceivedCallback = webMessageReceivedCallback;
 	_parent = parent;
-	_hWnd = CreateWindowExW(
+	_hWnd = CreateWindowEx(
 		0,                              // Optional window styles.
 		CLASS_NAME,                     // Window class
 		title,							// Window text
@@ -94,7 +94,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_USER_SHOWMESSAGE:
 	{
 		ShowMessageParams* params = (ShowMessageParams*)wParam;
-		MessageBoxW(hwnd, params->body.c_str(), params->title.c_str(), params->type);
+		MessageBox(hwnd, params->body.c_str(), params->title.c_str(), params->type);
 		delete params;
 		return 0;
 	}
@@ -152,7 +152,7 @@ void WebWindow::RefitContent()
 
 void WebWindow::SetTitle(AutoString title)
 {
-	SetWindowTextW(_hWnd, title);
+	SetWindowText(_hWnd, title);
 }
 
 void WebWindow::Show()
@@ -187,13 +187,13 @@ void WebWindow::ShowMessage(AutoString title, AutoString body, UINT type)
 	params->title = title;
 	params->body = body;
 	params->type = type;
-	PostMessageW(_hWnd, WM_USER_SHOWMESSAGE, (WPARAM)params, 0);
+	PostMessage(_hWnd, WM_USER_SHOWMESSAGE, (WPARAM)params, 0);
 }
 
 void WebWindow::Invoke(ACTION callback)
 {
 	InvokeWaitInfo waitInfo = {};
-	PostMessageW(_hWnd, WM_USER_INVOKE, (WPARAM)callback, (LPARAM)&waitInfo);
+	PostMessage(_hWnd, WM_USER_INVOKE, (WPARAM)callback, (LPARAM)&waitInfo);
 
 	// Block until the callback is actually executed and completed
 	// TODO: Add return values, exception handling, etc.
