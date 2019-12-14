@@ -427,7 +427,7 @@ namespace WebWindows
 
         public event EventHandler<Point> LocationChanged;
 
-        public IEnumerable<Monitor> Monitors
+        public IReadOnlyList<Monitor> Monitors
         {
             get
             {
