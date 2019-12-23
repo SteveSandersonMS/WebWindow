@@ -303,7 +303,7 @@ namespace WebWindows
                 if (_resizable != value)
                 {
                     _resizable = value;
-                    WebWindow_SetResizable(_nativeWebWindow, _resizable ? 1 : 0);
+                    Invoke(() => WebWindow_SetResizable(_nativeWebWindow, _resizable ? 1 : 0));
                 }
             }
         }
@@ -313,7 +313,7 @@ namespace WebWindows
 
         private void GetSize() => WebWindow_GetSize(_nativeWebWindow, out _width, out _height);
 
-        private void SetSize() => WebWindow_SetSize(_nativeWebWindow, _width, _height);
+        private void SetSize() => Invoke(() => WebWindow_SetSize(_nativeWebWindow, _width, _height));
 
         public int Width
         {
@@ -378,7 +378,7 @@ namespace WebWindows
 
         private void GetPosition() => WebWindow_GetPosition(_nativeWebWindow, out _x, out _y);
 
-        private void SetPosition() => WebWindow_SetPosition(_nativeWebWindow, _x, _y);
+        private void SetPosition() => Invoke(() => WebWindow_SetPosition(_nativeWebWindow, _x, _y));
 
         public int Left
         {
@@ -464,7 +464,7 @@ namespace WebWindows
                 if (_topmost != value)
                 {
                     _topmost = value;
-                    WebWindow_SetTopmost(_nativeWebWindow, _topmost ? 1 : 0);
+                    Invoke(() => WebWindow_SetTopmost(_nativeWebWindow, _topmost ? 1 : 0));
                 }
             }
         }
