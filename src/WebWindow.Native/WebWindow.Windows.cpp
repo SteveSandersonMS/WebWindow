@@ -237,12 +237,8 @@ void WebWindow::AttachWebView()
 								return S_OK;
 							}).Get(), &webMessageToken);
 
-						IWebView2WebView5* webviewWindow5;
-						_webviewWindow->QueryInterface<IWebView2WebView5>(&webviewWindow5);
-
 						EventRegistrationToken webResourceRequestedToken;
-						webviewWindow5->AddWebResourceRequestedFilter(nullptr, WEBVIEW2_WEB_RESOURCE_CONTEXT_ALL);
-						webviewWindow5->add_WebResourceRequested(Callback<IWebView2WebResourceRequestedEventHandler>(
+						_webviewWindow->add_WebResourceRequested(nullptr, nullptr, 0, Callback<IWebView2WebResourceRequestedEventHandler>(
 							[this](IWebView2WebView* sender, IWebView2WebResourceRequestedEventArgs* args)
 							{
 								IWebView2WebResourceRequest* req;
@@ -251,18 +247,18 @@ void WebWindow::AttachWebView()
 								wil::unique_cotaskmem_string uri;
 								req->get_Uri(&uri);
 								std::wstring uriString = uri.get();
-								size_t colonPos = uriString.find(L':');
+								size_t colonPos = uriString.find(L':', 0);
 								if (colonPos > 0)
 								{
 									std::wstring scheme = uriString.substr(0, colonPos);
 									WebResourceRequestedCallback handler = _schemeToRequestHandler[scheme];
-									if (handler)
+									if (handler != NULL)
 									{
 										int numBytes;
 										AutoString contentType;
 										wil::unique_cotaskmem dotNetResponse(handler(uriString.c_str(), &numBytes, &contentType));
 
-										if (dotNetResponse && contentType)
+										if (dotNetResponse != nullptr && contentType != nullptr)
 										{
 											std::wstring contentTypeWS = contentType;
 
