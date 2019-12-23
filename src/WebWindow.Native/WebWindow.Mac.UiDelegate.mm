@@ -58,4 +58,17 @@
         [alert release];
     }];
 }
+
+- (void)windowDidResize:(NSNotification *)notification {
+    int width, height;
+    webWindow->GetSize(&width, &height);
+    webWindow->InvokeResized(width, height);
+}
+
+- (void)windowDidMove:(NSNotification *)notification {
+    int x, y;
+    webWindow->GetPosition(&x, &y);
+    webWindow->InvokeMoved(x, y);
+}
+
 @end
