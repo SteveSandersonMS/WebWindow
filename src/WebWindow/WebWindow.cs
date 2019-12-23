@@ -83,9 +83,10 @@ namespace WebWindows
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_SetTopmost(IntPtr instance, int topmost);
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Auto)] static extern void WebWindow_SetIconFile(IntPtr instance, string filename);
 
-        private List<GCHandle> _gcHandlesToFree = new List<GCHandle>();
-        private List<IntPtr> _hGlobalToFree = new List<IntPtr>();
-        private IntPtr _nativeWebWindow;
+        private readonly List<GCHandle> _gcHandlesToFree = new List<GCHandle>();
+        private readonly List<IntPtr> _hGlobalToFree = new List<IntPtr>();
+        private readonly IntPtr _nativeWebWindow;
+        private readonly int _ownerThreadId;
         private string _title;
 
         static WebWindow()
@@ -113,6 +114,8 @@ namespace WebWindows
 
         public WebWindow(string title, Action<WebWindowOptions> configure)
         {
+            _ownerThreadId = Thread.CurrentThread.ManagedThreadId;
+
             if (configure is null)
             {
                 throw new ArgumentNullException(nameof(configure));
@@ -185,7 +188,15 @@ namespace WebWindows
 
         public void Invoke(Action workItem)
         {
-            WebWindow_Invoke(_nativeWebWindow, workItem.Invoke);
+            // If we're already on the UI thread, no need to dispatch
+            if (Thread.CurrentThread.ManagedThreadId == _ownerThreadId)
+            {
+                workItem();
+            }
+            else
+            {
+                WebWindow_Invoke(_nativeWebWindow, workItem.Invoke);
+            }
         }
 
         public IntPtr Hwnd
