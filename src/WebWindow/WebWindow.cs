@@ -1,33 +1,92 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace WebWindows
 {
+    [StructLayout(LayoutKind.Sequential)]
+    struct NativeRect
+    {
+        public int x, y;
+        public int width, height;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    struct NativeMonitor
+    {
+        public NativeRect monitor;
+        public NativeRect work;
+    }
+
+    public readonly struct Monitor
+    {
+        public readonly Rectangle MonitorArea;
+        public readonly Rectangle WorkArea;
+
+        public Monitor(Rectangle monitor, Rectangle work)
+        {
+            MonitorArea = monitor;
+            WorkArea = work;
+        }
+
+        internal Monitor(NativeRect monitor, NativeRect work)
+            : this(new Rectangle(monitor.x, monitor.y, monitor.width, monitor.height), new Rectangle(work.x, work.y, work.width, work.height))
+        { }
+
+        internal Monitor(NativeMonitor nativeMonitor)
+            : this(nativeMonitor.monitor, nativeMonitor.work)
+        { }
+    }
+
     public class WebWindow
     {
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate void OnWebMessageReceivedCallback([MarshalAs(UnmanagedType.LPUTF8Str)] string message);
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate IntPtr OnWebResourceRequestedCallback([MarshalAs(UnmanagedType.LPUTF8Str)] string url, out int numBytes, [MarshalAs(UnmanagedType.LPUTF8Str)] out string contentType);
+        // Here we use auto charset instead of forcing UTF-8.
+        // Thus the native code for Windows will be much more simple.
+        // Auto charset is UTF-16 on Windows and UTF-8 on Unix(.NET Core 3.0 and later and Mono).
+        // As we target .NET Standard 2.1, we assume it runs on .NET Core 3.0 and later.
+        // We should specify using auto charset because the default value is ANSI.
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Auto)] delegate void OnWebMessageReceivedCallback(string message);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Auto)] delegate IntPtr OnWebResourceRequestedCallback(string url, out int numBytes, out string contentType);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate void InvokeCallback();
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate int GetAllMonitorsCallback(in NativeMonitor monitor);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate void ResizedCallback(int width, int height);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate void MovedCallback(int x, int y);
 
         const string DllName = "WebWindow.Native";
-        [DllImport(DllName)] static extern IntPtr WebWindow_register_win32(IntPtr hInstance);
-        [DllImport(DllName)] static extern IntPtr WebWindow_register_mac();
-        [DllImport(DllName)] static extern IntPtr WebWindow_ctor([MarshalAs(UnmanagedType.LPUTF8Str)] string title, IntPtr parentWebWindow, IntPtr webMessageReceivedCallback);
-        [DllImport(DllName)] static extern IntPtr WebWindow_getHwnd_win32(IntPtr instance);
-        [DllImport(DllName)] static extern void WebWindow_SetTitle(IntPtr instance, [MarshalAs(UnmanagedType.LPUTF8Str)] string title);
-        [DllImport(DllName)] static extern void WebWindow_Show(IntPtr instance);
-        [DllImport(DllName)] static extern void WebWindow_WaitForExit(IntPtr instance);
-        [DllImport(DllName)] static extern void WebWindow_Invoke(IntPtr instance, IntPtr callback);
-        [DllImport(DllName)] static extern void WebWindow_NavigateToString(IntPtr instance, [MarshalAs(UnmanagedType.LPUTF8Str)] string content);
-        [DllImport(DllName)] static extern void WebWindow_NavigateToUrl(IntPtr instance, [MarshalAs(UnmanagedType.LPUTF8Str)] string url);
-        [DllImport(DllName)] static extern void WebWindow_ShowMessage(IntPtr instance, [MarshalAs(UnmanagedType.LPUTF8Str)] string title, [MarshalAs(UnmanagedType.LPUTF8Str)] string body, uint type);
-        [DllImport(DllName)] static extern void WebWindow_SendMessage(IntPtr instance, [MarshalAs(UnmanagedType.LPUTF8Str)] string message);
-        [DllImport(DllName)] static extern void WebWindow_AddCustomScheme(IntPtr instance, [MarshalAs(UnmanagedType.LPUTF8Str)] string scheme, IntPtr requestHandler);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern IntPtr WebWindow_register_win32(IntPtr hInstance);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern IntPtr WebWindow_register_mac();
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Auto)] static extern IntPtr WebWindow_ctor(string title, IntPtr parentWebWindow, OnWebMessageReceivedCallback webMessageReceivedCallback);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_dtor(IntPtr instance);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern IntPtr WebWindow_getHwnd_win32(IntPtr instance);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Auto)] static extern void WebWindow_SetTitle(IntPtr instance, string title);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_Show(IntPtr instance);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_WaitForExit(IntPtr instance);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_Invoke(IntPtr instance, InvokeCallback callback);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Auto)] static extern void WebWindow_NavigateToString(IntPtr instance, string content);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Auto)] static extern void WebWindow_NavigateToUrl(IntPtr instance, string url);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Auto)] static extern void WebWindow_ShowMessage(IntPtr instance, string title, string body, uint type);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Auto)] static extern void WebWindow_SendMessage(IntPtr instance, string message);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Auto)] static extern void WebWindow_AddCustomScheme(IntPtr instance, string scheme, OnWebResourceRequestedCallback requestHandler);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_SetResizable(IntPtr instance, int resizable);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_GetSize(IntPtr instance, out int width, out int height);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_SetSize(IntPtr instance, int width, int height);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_SetResizedCallback(IntPtr instance, ResizedCallback callback);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_GetAllMonitors(IntPtr instance, GetAllMonitorsCallback callback);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern uint WebWindow_GetScreenDpi(IntPtr instance);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_GetPosition(IntPtr instance, out int x, out int y);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_SetPosition(IntPtr instance, int x, int y);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_SetMovedCallback(IntPtr instance, MovedCallback callback);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_SetTopmost(IntPtr instance, int topmost);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Auto)] static extern void WebWindow_SetIconFile(IntPtr instance, string filename);
 
-        private List<GCHandle> _gcHandlesToFree = new List<GCHandle>();
-        private IntPtr _nativeWebWindow;
+        private readonly List<GCHandle> _gcHandlesToFree = new List<GCHandle>();
+        private readonly List<IntPtr> _hGlobalToFree = new List<IntPtr>();
+        private readonly IntPtr _nativeWebWindow;
+        private readonly int _ownerThreadId;
         private string _title;
 
         static WebWindow()
@@ -55,6 +114,8 @@ namespace WebWindows
 
         public WebWindow(string title, Action<WebWindowOptions> configure)
         {
+            _ownerThreadId = Thread.CurrentThread.ManagedThreadId;
+
             if (configure is null)
             {
                 throw new ArgumentNullException(nameof(configure));
@@ -67,15 +128,22 @@ namespace WebWindows
 
             var onWebMessageReceivedDelegate = (OnWebMessageReceivedCallback)ReceiveWebMessage;
             _gcHandlesToFree.Add(GCHandle.Alloc(onWebMessageReceivedDelegate));
-            var onWebMessageReceivedPtr = Marshal.GetFunctionPointerForDelegate(onWebMessageReceivedDelegate);
 
             var parentPtr = options.Parent?._nativeWebWindow ?? default;
-            _nativeWebWindow = WebWindow_ctor(_title, parentPtr, onWebMessageReceivedPtr);
+            _nativeWebWindow = WebWindow_ctor(_title, parentPtr, onWebMessageReceivedDelegate);
 
             foreach (var (schemeName, handler) in options.SchemeHandlers)
             {
                 AddCustomScheme(schemeName, handler);
             }
+
+            var onResizedDelegate = (ResizedCallback)OnResized;
+            _gcHandlesToFree.Add(GCHandle.Alloc(onResizedDelegate));
+            WebWindow_SetResizedCallback(_nativeWebWindow, onResizedDelegate);
+
+            var onMovedDelegate = (MovedCallback)OnMoved;
+            _gcHandlesToFree.Add(GCHandle.Alloc(onMovedDelegate));
+            WebWindow_SetMovedCallback(_nativeWebWindow, onMovedDelegate);
 
             // Auto-show to simplify the API, but more importantly because you can't
             // do things like navigate until it has been shown
@@ -85,11 +153,19 @@ namespace WebWindows
         ~WebWindow()
         {
             // TODO: IDisposable
+            WebWindow_SetResizedCallback(_nativeWebWindow, null);
+            WebWindow_SetMovedCallback(_nativeWebWindow, null);
             foreach (var gcHandle in _gcHandlesToFree)
             {
                 gcHandle.Free();
             }
             _gcHandlesToFree.Clear();
+            foreach (var handle in _hGlobalToFree)
+            {
+                Marshal.FreeHGlobal(handle);
+            }
+            _hGlobalToFree.Clear();
+            WebWindow_dtor(_nativeWebWindow);
         }
 
         public void Show() => WebWindow_Show(_nativeWebWindow);
@@ -112,9 +188,15 @@ namespace WebWindows
 
         public void Invoke(Action workItem)
         {
-            var fnPtr = Marshal.GetFunctionPointerForDelegate(workItem);
-            WebWindow_Invoke(_nativeWebWindow, fnPtr);
-            GC.KeepAlive(fnPtr);
+            // If we're already on the UI thread, no need to dispatch
+            if (Thread.CurrentThread.ManagedThreadId == _ownerThreadId)
+            {
+                workItem();
+            }
+            else
+            {
+                WebWindow_Invoke(_nativeWebWindow, workItem.Invoke);
+            }
         }
 
         public IntPtr Hwnd
@@ -172,7 +254,7 @@ namespace WebWindows
             _title = value;
         }
 
-        private void ReceiveWebMessage([MarshalAs(UnmanagedType.LPUTF8Str)] string message)
+        private void ReceiveWebMessage(string message)
         {
             OnWebMessageReceived?.Invoke(this, message);
         }
@@ -203,14 +285,190 @@ namespace WebWindows
                     numBytes = (int)ms.Position;
                     var buffer = Marshal.AllocHGlobal(numBytes);
                     Marshal.Copy(ms.GetBuffer(), 0, buffer, numBytes);
+                    _hGlobalToFree.Add(buffer);
                     return buffer;
                 }
             };
 
             _gcHandlesToFree.Add(GCHandle.Alloc(callback));
-
-            var callbackPtr = Marshal.GetFunctionPointerForDelegate(callback);
-            WebWindow_AddCustomScheme(_nativeWebWindow, scheme, callbackPtr);
+            WebWindow_AddCustomScheme(_nativeWebWindow, scheme, callback);
         }
+
+        private bool _resizable = true;
+        public bool Resizable
+        {
+            get => _resizable;
+            set
+            {
+                if (_resizable != value)
+                {
+                    _resizable = value;
+                    Invoke(() => WebWindow_SetResizable(_nativeWebWindow, _resizable ? 1 : 0));
+                }
+            }
+        }
+
+        private int _width;
+        private int _height;
+
+        private void GetSize() => WebWindow_GetSize(_nativeWebWindow, out _width, out _height);
+
+        private void SetSize() => Invoke(() => WebWindow_SetSize(_nativeWebWindow, _width, _height));
+
+        public int Width
+        {
+            get
+            {
+                GetSize();
+                return _width;
+            }
+            set
+            {
+                GetSize();
+                if (_width != value)
+                {
+                    _width = value;
+                    SetSize();
+                }
+            }
+        }
+
+        public int Height
+        {
+            get
+            {
+                GetSize();
+                return _height;
+            }
+            set
+            {
+                GetSize();
+                if (_height != value)
+                {
+                    _height = value;
+                    SetSize();
+                }
+            }
+        }
+
+        public Size Size
+        {
+            get
+            {
+                GetSize();
+                return new Size(_width, _height);
+            }
+            set
+            {
+                if (_width != value.Width || _height != value.Height)
+                {
+                    _width = value.Width;
+                    _height = value.Height;
+                    SetSize();
+                }
+            }
+        }
+
+        private void OnResized(int width, int height) => SizeChanged?.Invoke(this, new Size(width, height));
+
+        public event EventHandler<Size> SizeChanged;
+
+        private int _x;
+        private int _y;
+
+        private void GetPosition() => WebWindow_GetPosition(_nativeWebWindow, out _x, out _y);
+
+        private void SetPosition() => Invoke(() => WebWindow_SetPosition(_nativeWebWindow, _x, _y));
+
+        public int Left
+        {
+            get
+            {
+                GetPosition();
+                return _x;
+            }
+            set
+            {
+                GetPosition();
+                if (_x != value)
+                {
+                    _x = value;
+                    SetPosition();
+                }
+            }
+        }
+
+        public int Top
+        {
+            get
+            {
+                GetPosition();
+                return _y;
+            }
+            set
+            {
+                GetPosition();
+                if (_y != value)
+                {
+                    _y = value;
+                    SetPosition();
+                }
+            }
+        }
+
+        public Point Location
+        {
+            get
+            {
+                GetPosition();
+                return new Point(_x, _y);
+            }
+            set
+            {
+                if (_x != value.X || _y != value.Y)
+                {
+                    _x = value.X;
+                    _y = value.Y;
+                    SetPosition();
+                }
+            }
+        }
+
+        private void OnMoved(int x, int y) => LocationChanged?.Invoke(this, new Point(x, y));
+
+        public event EventHandler<Point> LocationChanged;
+
+        public IReadOnlyList<Monitor> Monitors
+        {
+            get
+            {
+                List<Monitor> monitors = new List<Monitor>();
+                int callback(in NativeMonitor monitor)
+                {
+                    monitors.Add(new Monitor(monitor));
+                    return 1;
+                }
+                WebWindow_GetAllMonitors(_nativeWebWindow, callback);
+                return monitors;
+            }
+        }
+
+        public uint ScreenDpi => WebWindow_GetScreenDpi(_nativeWebWindow);
+
+        private bool _topmost = false;
+        public bool Topmost
+        {
+            get => _topmost;
+            set
+            {
+                if (_topmost != value)
+                {
+                    _topmost = value;
+                    Invoke(() => WebWindow_SetTopmost(_nativeWebWindow, _topmost ? 1 : 0));
+                }
+            }
+        }
+
+        public void SetIconFile(string filename) => WebWindow_SetIconFile(_nativeWebWindow, Path.GetFullPath(filename));
     }
 }

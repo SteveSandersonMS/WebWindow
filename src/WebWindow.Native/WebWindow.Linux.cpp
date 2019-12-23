@@ -4,6 +4,7 @@
 #include "WebWindow.h"
 #include <mutex>
 #include <condition_variable>
+#include <X11/Xlib.h>
 #include <webkit2/webkit2.h>
 #include <JavaScriptCore/JavaScript.h>
 #include <sstream>
@@ -23,30 +24,46 @@ struct InvokeJSWaitInfo
 	bool isCompleted;
 };
 
-WebWindow::WebWindow(UTF8String title, WebWindow* parent, WebMessageReceivedCallback webMessageReceivedCallback)
+void on_size_allocate(GtkWidget* widget, GdkRectangle* allocation, gpointer self);
+gboolean on_configure_event(GtkWidget* widget, GdkEvent* event, gpointer self);
+
+WebWindow::WebWindow(AutoString title, WebWindow* parent, WebMessageReceivedCallback webMessageReceivedCallback) : _webview(nullptr)
 {
 	_webMessageReceivedCallback = webMessageReceivedCallback;
 
+	// It makes xlib thread safe.
+	// Needed for get_position.
+	XInitThreads();
+
 	gtk_init(0, NULL);
 	_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-	gtk_window_set_default_size((GtkWindow*)_window, 900, 600);
+	gtk_window_set_default_size(GTK_WINDOW(_window), 900, 600);
 	SetTitle(title);
 
 	if (parent == NULL)
 	{
 		g_signal_connect(G_OBJECT(_window), "destroy",
-			G_CALLBACK(+[](GtkWidget* w, gpointer arg) {
-				gtk_main_quit();
-			}),
+			G_CALLBACK(+[](GtkWidget* w, gpointer arg) { gtk_main_quit(); }),
+			this);
+		g_signal_connect(G_OBJECT(_window), "size-allocate",
+			G_CALLBACK(on_size_allocate),
+			this);
+		g_signal_connect(G_OBJECT(_window), "configure-event",
+			G_CALLBACK(on_configure_event),
 			this);
 	}
+}
+
+WebWindow::~WebWindow()
+{
+	gtk_widget_destroy(_window);
 }
 
 void HandleWebMessage(WebKitUserContentManager* contentManager, WebKitJavascriptResult* jsResult, gpointer arg)
 {
 	JSCValue* jsValue = webkit_javascript_result_get_js_value(jsResult);
 	if (jsc_value_is_string(jsValue)) {
-		UTF8String str_value = jsc_value_to_string(jsValue);
+		AutoString str_value = jsc_value_to_string(jsValue);
 
 		WebMessageReceivedCallback callback = (WebMessageReceivedCallback)arg;
 		callback(str_value);
@@ -91,9 +108,9 @@ void WebWindow::Show()
 	webkit_web_inspector_show(WEBKIT_WEB_INSPECTOR(inspector));
 }
 
-void WebWindow::SetTitle(UTF8String title)
+void WebWindow::SetTitle(AutoString title)
 {
-	gtk_window_set_title((GtkWindow*)_window, title);
+	gtk_window_set_title(GTK_WINDOW(_window), title);
 }
 
 void WebWindow::WaitForExit()
@@ -125,9 +142,9 @@ void WebWindow::Invoke(ACTION callback)
 	waitInfo.completionNotifier.wait(uLock, [&] { return waitInfo.isCompleted; });
 }
 
-void WebWindow::ShowMessage(UTF8String title, UTF8String body, unsigned int type)
+void WebWindow::ShowMessage(AutoString title, AutoString body, unsigned int type)
 {
-	GtkWidget* dialog = gtk_message_dialog_new((GtkWindow*)_window,
+	GtkWidget* dialog = gtk_message_dialog_new(GTK_WINDOW(_window),
 		GTK_DIALOG_DESTROY_WITH_PARENT,
 		GTK_MESSAGE_OTHER,
 		GTK_BUTTONS_OK,
@@ -138,12 +155,12 @@ void WebWindow::ShowMessage(UTF8String title, UTF8String body, unsigned int type
 	gtk_widget_destroy(dialog);
 }
 
-void WebWindow::NavigateToUrl(UTF8String url)
+void WebWindow::NavigateToUrl(AutoString url)
 {
 	webkit_web_view_load_uri(WEBKIT_WEB_VIEW(_webview), url);
 }
 
-void WebWindow::NavigateToString(UTF8String content)
+void WebWindow::NavigateToString(AutoString content)
 {
 	webkit_web_view_load_html(WEBKIT_WEB_VIEW(_webview), content, NULL);
 }
@@ -178,7 +195,7 @@ static void webview_eval_finished(GObject* object, GAsyncResult* result, gpointe
 	waitInfo->isCompleted = true;
 }
 
-void WebWindow::SendMessage(UTF8String message)
+void WebWindow::SendMessage(AutoString message)
 {
 	std::string js;
 	js.append("__dispatchMessageCallback(\"");
@@ -199,20 +216,97 @@ void HandleCustomSchemeRequest(WebKitURISchemeRequest* request, gpointer user_da
 
 	const gchar* uri = webkit_uri_scheme_request_get_uri(request);
 	int numBytes;
-	UTF8String contentType;
-	void* dotNetResponse = webResourceRequestedCallback((UTF8String)uri, &numBytes, &contentType);
+	AutoString contentType;
+	void* dotNetResponse = webResourceRequestedCallback((AutoString)uri, &numBytes, &contentType);
 	GInputStream* stream = g_memory_input_stream_new_from_data(dotNetResponse, numBytes, NULL);
 	webkit_uri_scheme_request_finish(request, (GInputStream*)stream, -1, contentType);
 	g_object_unref(stream);
 	delete[] contentType;
 }
 
-void WebWindow::AddCustomScheme(UTF8String scheme, WebResourceRequestedCallback requestHandler)
+void WebWindow::AddCustomScheme(AutoString scheme, WebResourceRequestedCallback requestHandler)
 {
 	WebKitWebContext* context = webkit_web_context_get_default();
 	webkit_web_context_register_uri_scheme(context, scheme,
 		(WebKitURISchemeRequestCallback)HandleCustomSchemeRequest,
 		(void*)requestHandler, NULL);
+}
+
+void WebWindow::SetResizable(bool resizable)
+{
+	gtk_window_set_resizable(GTK_WINDOW(_window), resizable ? TRUE : FALSE);
+}
+
+void WebWindow::GetSize(int* width, int* height)
+{
+	gtk_window_get_size(GTK_WINDOW(_window), width, height);
+}
+
+void WebWindow::SetSize(int width, int height)
+{
+	gtk_window_resize(GTK_WINDOW(_window), width, height);
+}
+
+void on_size_allocate(GtkWidget* widget, GdkRectangle* allocation, gpointer self)
+{
+	int width, height;
+	gtk_window_get_size(GTK_WINDOW(widget), &width, &height);
+	((WebWindow*)self)->InvokeResized(width, height);
+}
+
+void WebWindow::GetAllMonitors(GetAllMonitorsCallback callback)
+{
+    if (callback)
+    {
+        GdkScreen* screen = gtk_window_get_screen(GTK_WINDOW(_window));
+        GdkDisplay* display = gdk_screen_get_display(screen);
+        int n = gdk_display_get_n_monitors(display);
+        for (int i = 0; i < n; i++)
+        {
+            GdkMonitor* monitor = gdk_display_get_monitor(display, i);
+            Monitor props = {};
+            gdk_monitor_get_geometry(monitor, (GdkRectangle*)&props.monitor);
+            gdk_monitor_get_workarea(monitor, (GdkRectangle*)&props.work);
+            if (!callback(&props)) break;
+        }
+    }
+}
+
+unsigned int WebWindow::GetScreenDpi()
+{
+	GdkScreen* screen = gtk_window_get_screen(GTK_WINDOW(_window));
+	gdouble dpi = gdk_screen_get_resolution(screen);
+	if (dpi < 0) return 96;
+	else return (unsigned int)dpi;
+}
+
+void WebWindow::GetPosition(int* x, int* y)
+{
+	gtk_window_get_position(GTK_WINDOW(_window), x, y);
+}
+
+void WebWindow::SetPosition(int x, int y)
+{
+	gtk_window_move(GTK_WINDOW(_window), x, y);
+}
+
+gboolean on_configure_event(GtkWidget* widget, GdkEvent* event, gpointer self)
+{
+	if (event->type == GDK_CONFIGURE)
+	{
+		((WebWindow*)self)->InvokeMoved(event->configure.x, event->configure.y);
+	}
+	return FALSE;
+}
+
+void WebWindow::SetTopmost(bool topmost)
+{
+	gtk_window_set_keep_above(GTK_WINDOW(_window), topmost ? TRUE : FALSE);
+}
+
+void WebWindow::SetIconFile(AutoString filename)
+{
+	gtk_window_set_icon_from_file(GTK_WINDOW(_window), filename, NULL);
 }
 
 #endif

@@ -3,9 +3,14 @@
 #import "WebWindow.Mac.AppDelegate.h"
 #import "WebWindow.Mac.UiDelegate.h"
 #import "WebWindow.Mac.UrlSchemeHandler.h"
-#include <stdio.h>
+#include <cstdio>
+#include <map>
 #import <Cocoa/Cocoa.h>
 #import <WebKit/WebKit.h>
+
+using namespace std;
+
+map<NSWindow*, WebWindow*> nsWindowToWebWindow;
 
 void WebWindow::Register()
 {
@@ -29,7 +34,7 @@ void WebWindow::Register()
     [application setDelegate:appDelegate];
 }
 
-WebWindow::WebWindow(UTF8String title, WebWindow* parent, WebMessageReceivedCallback webMessageReceivedCallback)
+WebWindow::WebWindow(AutoString title, WebWindow* parent, WebMessageReceivedCallback webMessageReceivedCallback)
 {
     _webMessageReceivedCallback = webMessageReceivedCallback;
     NSRect frame = NSMakeRect(0, 0, 900, 600);
@@ -49,9 +54,20 @@ WebWindow::WebWindow(UTF8String title, WebWindow* parent, WebMessageReceivedCall
     _webview = nil;
 }
 
+WebWindow::~WebWindow()
+{
+    WKWebViewConfiguration *webViewConfiguration = (WKWebViewConfiguration*)_webviewConfiguration;
+    [webViewConfiguration release];
+    WKWebView *webView = (WKWebView*)_webview;
+    [webView release];
+    NSWindow* window = (NSWindow*)_window;
+    [window close];
+}
+
 void WebWindow::AttachWebView()
 {
     MyUiDelegate *uiDelegate = [[[MyUiDelegate alloc] init] autorelease];
+    uiDelegate->webWindow = this;
 
     NSString *initScriptSource = @"window.__receiveMessageCallbacks = [];"
 			"window.__dispatchMessageCallback = function(message) {"
@@ -83,6 +99,10 @@ void WebWindow::AttachWebView()
     uiDelegate->webMessageReceivedCallback = _webMessageReceivedCallback;
     [userContentController addScriptMessageHandler:uiDelegate name:@"webwindowinterop"];
 
+    // TODO: Remove these observers when the window is closed
+    [[NSNotificationCenter defaultCenter] addObserver:uiDelegate selector:@selector(windowDidResize:) name:NSWindowDidResizeNotification object:window];
+    [[NSNotificationCenter defaultCenter] addObserver:uiDelegate selector:@selector(windowDidMove:) name:NSWindowDidMoveNotification object:window];
+
     _webview = webView;
 }
 
@@ -96,7 +116,7 @@ void WebWindow::Show()
     [window makeKeyAndOrderFront:nil];
 }
 
-void WebWindow::SetTitle(UTF8String title)
+void WebWindow::SetTitle(AutoString title)
 {
     NSWindow* window = (NSWindow*)_window;
     NSString* nstitle = [[NSString stringWithUTF8String:title] autorelease];
@@ -115,7 +135,7 @@ void WebWindow::Invoke(ACTION callback)
     });
 }
 
-void WebWindow::ShowMessage(UTF8String title, UTF8String body, unsigned int type)
+void WebWindow::ShowMessage(AutoString title, AutoString body, unsigned int type)
 {
     NSString* nstitle = [[NSString stringWithUTF8String:title] autorelease];
     NSString* nsbody= [[NSString stringWithUTF8String:body] autorelease];
@@ -125,14 +145,14 @@ void WebWindow::ShowMessage(UTF8String title, UTF8String body, unsigned int type
     [alert runModal];
 }
 
-void WebWindow::NavigateToString(UTF8String content)
+void WebWindow::NavigateToString(AutoString content)
 {
     WKWebView *webView = (WKWebView *)_webview;
     NSString* nscontent = [[NSString stringWithUTF8String:content] autorelease];
     [webView loadHTMLString:nscontent baseURL:nil];
 }
 
-void WebWindow::NavigateToUrl(UTF8String url)
+void WebWindow::NavigateToUrl(AutoString url)
 {
     WKWebView *webView = (WKWebView *)_webview;
     NSString* nsurlstring = [[NSString stringWithUTF8String:url] autorelease];
@@ -141,7 +161,7 @@ void WebWindow::NavigateToUrl(UTF8String url)
     [webView loadRequest:nsrequest];
 }
 
-void WebWindow::SendMessage(UTF8String message)
+void WebWindow::SendMessage(AutoString message)
 {
     // JSON-encode the message
     NSString* nsmessage = [NSString stringWithUTF8String:message];
@@ -156,7 +176,7 @@ void WebWindow::SendMessage(UTF8String message)
     [webView evaluateJavaScript:javaScriptToEval completionHandler:nil];
 }
 
-void WebWindow::AddCustomScheme(UTF8String scheme, WebResourceRequestedCallback requestHandler)
+void WebWindow::AddCustomScheme(AutoString scheme, WebResourceRequestedCallback requestHandler)
 {
     // Note that this can only be done *before* the WKWebView is instantiated, so we only let this
     // get called from the options callback in the constructor
@@ -166,6 +186,96 @@ void WebWindow::AddCustomScheme(UTF8String scheme, WebResourceRequestedCallback 
     WKWebViewConfiguration *webviewConfiguration = (WKWebViewConfiguration *)_webviewConfiguration;
     NSString* nsscheme = [NSString stringWithUTF8String:scheme];
     [webviewConfiguration setURLSchemeHandler:schemeHandler forURLScheme:nsscheme];
+}
+
+void WebWindow::SetResizable(bool resizable)
+{
+    NSWindow* window = (NSWindow*)_window;
+    if (resizable) window.styleMask |= NSWindowStyleMaskResizable;
+    else window.styleMask &= ~NSWindowStyleMaskResizable;
+}
+
+void WebWindow::GetSize(int* width, int* height)
+{
+    NSWindow* window = (NSWindow*)_window;
+    NSSize size = [window frame].size;
+    if (width) *width = (int)roundf(size.width);
+    if (height) *height = (int)roundf(size.height);
+}
+
+void WebWindow::SetSize(int width, int height)
+{
+    CGFloat fw = (CGFloat)width;
+    CGFloat fh = (CGFloat)height;
+    NSWindow* window = (NSWindow*)_window;
+    NSRect frame = [window frame];
+    CGFloat oldHeight = frame.size.height;
+    CGFloat heightDelta = fh - oldHeight;  
+    frame.size = CGSizeMake(fw, fh);
+    frame.origin.y -= heightDelta;
+    [window setFrame: frame display: YES];
+}
+
+void WebWindow::GetAllMonitors(GetAllMonitorsCallback callback)
+{
+    if (callback)
+    {
+        for (NSScreen* screen in [NSScreen screens])
+        {
+            Monitor props = {};
+            NSRect frame = [screen frame];
+            props.monitor.x = (int)roundf(frame.origin.x);
+            props.monitor.y = (int)roundf(frame.origin.y);
+            props.monitor.width = (int)roundf(frame.size.width);
+            props.monitor.height = (int)roundf(frame.size.height);
+            NSRect vframe = [screen visibleFrame];
+            props.work.x = (int)roundf(vframe.origin.x);
+            props.work.y = (int)roundf(vframe.origin.y);
+            props.work.width = (int)roundf(vframe.size.width);
+            props.work.height = (int)roundf(vframe.size.height);
+            callback(&props);
+        }
+    }
+}
+
+unsigned int WebWindow::GetScreenDpi()
+{
+	return 72;
+}
+
+void WebWindow::GetPosition(int* x, int* y)
+{
+    NSWindow* window = (NSWindow*)_window;
+    NSRect frame = [window frame];
+    if (x) *x = (int)roundf(frame.origin.x);
+    if (y) *y = (int)roundf(-frame.size.height - frame.origin.y); // It will be negative, because macOS measures from bottom-left. For x-plat consistency, we want increasing this value to mean moving down.
+}
+
+void WebWindow::SetPosition(int x, int y)
+{
+    NSWindow* window = (NSWindow*)_window;
+    NSRect frame = [window frame];
+    frame.origin.x = (CGFloat)x;
+    frame.origin.y = -frame.size.height - (CGFloat)y;
+    [window setFrame: frame display: YES];
+}
+
+void WebWindow::SetTopmost(bool topmost)
+{
+    NSWindow* window = (NSWindow*)_window;
+    if (topmost) [window setLevel:NSFloatingWindowLevel];
+    else [window setLevel:NSNormalWindowLevel];
+}
+
+void WebWindow::SetIconFile(AutoString filename)
+{
+	NSString* path = [[NSString stringWithUTF8String:filename] autorelease];
+    NSImage* icon = [[NSImage alloc] initWithContentsOfFile:path];
+    if (icon != nil)
+    {
+        NSWindow* window = (NSWindow*)_window;
+        [[window standardWindowButton:NSWindowDocumentIconButton] setImage:icon];
+    }
 }
 
 #endif
