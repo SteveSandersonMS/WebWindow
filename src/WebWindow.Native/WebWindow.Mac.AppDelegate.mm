@@ -1,8 +1,4 @@
 #import "WebWindow.Mac.AppDelegate.h"
-#include "WebWindow.h"
-#include <map>
-
-extern std::map<NSWindow*, WebWindow*> nsWindowToWebWindow;
 
 @implementation MyApplicationDelegate : NSObject
 - (id)init {
@@ -15,28 +11,6 @@ extern std::map<NSWindow*, WebWindow*> nsWindowToWebWindow;
 - (void)applicationDidFinishLaunching:(NSNotification *)notification {
     [window makeKeyAndOrderFront:nil];
     [NSApp activateIgnoringOtherApps:YES];
-}
-
-- (void)windowDidResize:(NSNotification *)notification {
-    NSWindow *window = notification.object;
-    WebWindow* webWindow = nsWindowToWebWindow[window];
-    if (webWindow)
-    {
-        int width, height;
-        webWindow->GetSize(&width, &height);
-        webWindow->InvokeResized(width, height);
-    }
-}
-
-- (void)windowDidMove:(NSNotification *)notification {
-    NSWindow *window = notification.object;
-    WebWindow* webWindow = nsWindowToWebWindow[window];
-    if (webWindow)
-    {
-        int x, y;
-        webWindow->GetPosition(&x, &y);
-        webWindow->InvokeMoved(x, y);
-    }
 }
 
 - (void)dealloc {

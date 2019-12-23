@@ -67,6 +67,7 @@ WebWindow::~WebWindow()
 void WebWindow::AttachWebView()
 {
     MyUiDelegate *uiDelegate = [[[MyUiDelegate alloc] init] autorelease];
+    uiDelegate->webWindow = this;
 
     NSString *initScriptSource = @"window.__receiveMessageCallbacks = [];"
 			"window.__dispatchMessageCallback = function(message) {"
@@ -97,6 +98,9 @@ void WebWindow::AttachWebView()
 
     uiDelegate->webMessageReceivedCallback = _webMessageReceivedCallback;
     [userContentController addScriptMessageHandler:uiDelegate name:@"webwindowinterop"];
+
+    [[NSNotificationCenter defaultCenter] addObserver:uiDelegate selector:@selector(windowDidResize:) name:NSWindowDidResizeNotification object:window];
+    [[NSNotificationCenter defaultCenter] addObserver:uiDelegate selector:@selector(windowDidMove:) name:NSWindowDidMoveNotification object:window];
 
     _webview = webView;
 }
