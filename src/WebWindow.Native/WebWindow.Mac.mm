@@ -208,11 +208,10 @@ void WebWindow::SetSize(int width, int height)
     CGFloat fh = (CGFloat)height;
     NSWindow* window = (NSWindow*)_window;
     NSRect frame = [window frame];
-    frame.origin.x -= frame.size.width;
-    frame.origin.x += fw;
-    frame.origin.y -= frame.size.height;
-    frame.origin.y += fh;
+    CGFloat oldHeight = frame.size.height;
+    CGFloat heightDelta = fh - oldHeight;  
     frame.size = CGSizeMake(fw, fh);
+    frame.origin.y -= heightDelta;
     [window setFrame: frame display: YES];
 }
 
@@ -247,16 +246,16 @@ void WebWindow::GetPosition(int* x, int* y)
 {
     NSWindow* window = (NSWindow*)_window;
     NSRect frame = [window frame];
-    if (x) *x = (int)roundf(frame.origin.x - frame.size.width);
-    if (y) *y = (int)roundf(frame.origin.y - frame.size.height);
+    if (x) *x = (int)roundf(frame.origin.x);
+    if (y) *y = (int)roundf(-frame.size.height - frame.origin.y); // It will be negative, because macOS measures from bottom-left. For x-plat consistency, we want increasing this value to mean moving down.
 }
 
 void WebWindow::SetPosition(int x, int y)
 {
     NSWindow* window = (NSWindow*)_window;
     NSRect frame = [window frame];
-    frame.origin.x = frame.size.width + (CGFloat)x;
-    frame.origin.y = frame.size.height + (CGFloat)y;
+    frame.origin.x = (CGFloat)x;
+    frame.origin.y = -frame.size.height - (CGFloat)y;
     [window setFrame: frame display: YES];
 }
 
