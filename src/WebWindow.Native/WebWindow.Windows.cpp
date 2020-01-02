@@ -226,7 +226,7 @@ void WebWindow::AttachWebView()
 						Settings->put_AreDefaultScriptDialogsEnabled(TRUE);
 						Settings->put_IsWebMessageEnabled(TRUE);
                         // Add a navigation change event handler
-	/*					EventRegistrationToken token;
+						EventRegistrationToken token;
                         _webviewWindow->add_NavigationStarting(Callback<IWebView2NavigationStartingEventHandler>(
                             [this](IWebView2WebView* webview, IWebView2NavigationStartingEventArgs * args) -> HRESULT {
                                 PWSTR uri;
@@ -234,7 +234,7 @@ void WebWindow::AttachWebView()
                                 _uriChangeCallback(uri);
                                 CoTaskMemFree(uri);
                                 return S_OK;
-                            }).Get(), &token);*/
+                            }).Get(), &token);
                         
                         
 						// Register interop APIs
