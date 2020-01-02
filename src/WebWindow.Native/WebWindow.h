@@ -31,6 +31,7 @@ typedef void* (*WebResourceRequestedCallback)(AutoString url, int* outNumBytes, 
 typedef int (*GetAllMonitorsCallback)(const Monitor* monitor);
 typedef void (*ResizedCallback)(int width, int height);
 typedef void (*MovedCallback)(int x, int y);
+typedef void (*UriChangeCallback)(AutoString url);
 
 class WebWindow
 {
@@ -38,6 +39,7 @@ private:
 	WebMessageReceivedCallback _webMessageReceivedCallback;
 	MovedCallback _movedCallback;
 	ResizedCallback _resizedCallback;
+	UriChangeCallback _uriChangeCallback;
 #ifdef _WIN32
 	static HINSTANCE _hInstance;
 	HWND _hWnd;
@@ -87,6 +89,8 @@ public:
 	void SetPosition(int x, int y);
 	void SetMovedCallback(MovedCallback callback) { _movedCallback = callback; }
 	void InvokeMoved(int x, int y) { if (_movedCallback) _movedCallback(x, y); }
+	void SetUriChangeCallback(UriChangeCallback callback) { _uriChangeCallback = callback; }
+	void InvokeUriChange(AutoString uri) { if (_uriChangeCallback) _uriChangeCallback(uri); }
 	void SetTopmost(bool topmost);
 	void SetIconFile(AutoString filename);
 };

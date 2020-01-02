@@ -153,9 +153,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="WebWindow.h" />
+    <ClInclude Include="WebWindow.Mac.NavigationDelegate.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="WebWindow.Mac.NavigationDelegate.mm" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
