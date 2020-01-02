@@ -80,7 +80,7 @@ void HandleUriChange(GObject* object, WebKitLoadEvent event, gpointer user_data)
     
     const gchar *uri;
     
-    if (event == WEBKIT_LOAD_STARTED) {
+    if (event == WEBKIT_LOAD_FINISHED) {
         web_view = WEBKIT_WEB_VIEW(object);
         uri = webkit_web_view_get_uri(web_view);
         
