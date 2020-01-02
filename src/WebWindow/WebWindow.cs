@@ -56,6 +56,9 @@ namespace WebWindows
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate void ResizedCallback(int width, int height);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate void MovedCallback(int x, int y);
 
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Auto)]
+        delegate void UriChangeCallback(string uri); 
+
         const string DllName = "WebWindow.Native";
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern IntPtr WebWindow_register_win32(IntPtr hInstance);
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern IntPtr WebWindow_register_mac();
@@ -82,6 +85,9 @@ namespace WebWindows
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_SetMovedCallback(IntPtr instance, MovedCallback callback);
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_SetTopmost(IntPtr instance, int topmost);
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Auto)] static extern void WebWindow_SetIconFile(IntPtr instance, string filename);
+
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Auto)]
+        static extern void WebWindow_SetUriChangeCallback(IntPtr instance, UriChangeCallback callback);
 
         private readonly List<GCHandle> _gcHandlesToFree = new List<GCHandle>();
         private readonly List<IntPtr> _hGlobalToFree = new List<IntPtr>();
@@ -145,6 +151,10 @@ namespace WebWindows
             _gcHandlesToFree.Add(GCHandle.Alloc(onMovedDelegate));
             WebWindow_SetMovedCallback(_nativeWebWindow, onMovedDelegate);
 
+            var onUriChangeDelegate = (UriChangeCallback)UriChanged;
+            _gcHandlesToFree.Add(GCHandle.Alloc(onUriChangeDelegate));
+            WebWindow_SetUriChangeCallback(_nativeWebWindow, onUriChangeDelegate);
+            
             // Auto-show to simplify the API, but more importantly because you can't
             // do things like navigate until it has been shown
             Show();
@@ -237,6 +247,10 @@ namespace WebWindows
         }
 
         public event EventHandler<string> OnWebMessageReceived;
+        
+        private void UriChanged(string uri) => OnUriChange?.Invoke(this, uri);
+
+        public event EventHandler<string> OnUriChange;
 
         private void WriteTitleField(string value)
         {

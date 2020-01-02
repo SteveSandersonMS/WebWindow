@@ -73,6 +73,23 @@ void HandleWebMessage(WebKitUserContentManager* contentManager, WebKitJavascript
 	webkit_javascript_result_unref(jsResult);
 }
 
+void HandleUriChange(GObject* object, WebKitLoadEvent event, gpointer user_data)
+{
+    WebKitWebView *web_view;
+    
+    
+    const gchar *uri;
+    
+    if (event == WEBKIT_LOAD_FINISHED) {
+        web_view = WEBKIT_WEB_VIEW(object);
+        uri = webkit_web_view_get_uri(web_view);
+        
+        UriChangeCallback callback = (UriChangeCallback)user_data;
+        callback(AutoString(uri));
+    }
+    
+}
+
 void WebWindow::Show()
 {
 	if (!_webview)
@@ -99,6 +116,7 @@ void WebWindow::Show()
 
 		g_signal_connect(contentManager, "script-message-received::webwindowinterop",
 			G_CALLBACK(HandleWebMessage), (void*)_webMessageReceivedCallback);
+		g_signal_connect(_webview, "load-changed", G_CALLBACK(HandleUriChange), (void*)_uriChangeCallback);
 		webkit_user_content_manager_register_script_message_handler(contentManager, "webwindowinterop");
 	}
 
@@ -154,6 +172,7 @@ void WebWindow::ShowMessage(AutoString title, AutoString body, unsigned int type
 	gtk_dialog_run(GTK_DIALOG(dialog));
 	gtk_widget_destroy(dialog);
 }
+
 
 void WebWindow::NavigateToUrl(AutoString url)
 {

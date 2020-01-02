@@ -3,6 +3,7 @@
 #import "WebWindow.Mac.AppDelegate.h"
 #import "WebWindow.Mac.UiDelegate.h"
 #import "WebWindow.Mac.UrlSchemeHandler.h"
+#import "WebWindow.Mac.NavigationDelegate.h"
 #include <cstdio>
 #include <map>
 #import <Cocoa/Cocoa.h>
@@ -69,6 +70,9 @@ void WebWindow::AttachWebView()
     MyUiDelegate *uiDelegate = [[[MyUiDelegate alloc] init] autorelease];
     uiDelegate->webWindow = this;
 
+    MyNavigationDelegate *navDelegate = [[[MyNavigationDelegate alloc] init] autorelease];
+    
+
     NSString *initScriptSource = @"window.__receiveMessageCallbacks = [];"
 			"window.__dispatchMessageCallback = function(message) {"
 			"	window.__receiveMessageCallbacks.forEach(function(callback) { callback(message); });"
@@ -92,12 +96,18 @@ void WebWindow::AttachWebView()
     [webView setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
     [window.contentView addSubview:webView];
     [window.contentView setAutoresizesSubviews:YES];
-
+    
     uiDelegate->window = window;
     webView.UIDelegate = uiDelegate;
-
+    
     uiDelegate->webMessageReceivedCallback = _webMessageReceivedCallback;
     [userContentController addScriptMessageHandler:uiDelegate name:@"webwindowinterop"];
+
+    navDelegate->window = window;
+    navDelegate->webWindow = this;
+    navDelegate->uriChangedCallback = _uriChangeCallback;
+
+    webView.navigationDelegate = navDelegate;
 
     // TODO: Remove these observers when the window is closed
     [[NSNotificationCenter defaultCenter] addObserver:uiDelegate selector:@selector(windowDidResize:) name:NSWindowDidResizeNotification object:window];

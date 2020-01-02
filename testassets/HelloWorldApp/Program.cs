@@ -22,7 +22,10 @@ namespace HelloWorldApp
             {
                 window.SendMessage("Got message: " + message);
             };
-
+            window.OnUriChange += (sender, uri) =>
+            {
+                Console.WriteLine($"New URI: {uri}");
+            };
             window.NavigateToLocalFile("wwwroot/index.html");
             window.WaitForExit();
         }
