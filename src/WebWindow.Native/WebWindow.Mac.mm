@@ -72,7 +72,6 @@ void WebWindow::AttachWebView()
 
     MyNavigationDelegate *navDelegate = [[[MyNavigationDelegate alloc] init] autorelease];
     
-
     NSString *initScriptSource = @"window.__receiveMessageCallbacks = [];"
 			"window.__dispatchMessageCallback = function(message) {"
 			"	window.__receiveMessageCallbacks.forEach(function(callback) { callback(message); });"
