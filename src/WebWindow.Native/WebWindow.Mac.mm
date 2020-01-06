@@ -96,7 +96,6 @@ void WebWindow::AttachWebView()
     [webView setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
     [window.contentView addSubview:webView];
     [window.contentView setAutoresizesSubviews:YES];
-    
     uiDelegate->window = window;
     webView.UIDelegate = uiDelegate;
     uiDelegate->webMessageReceivedCallback = _webMessageReceivedCallback;
