@@ -6,7 +6,7 @@
 {
     const char* uri = [webView.URL.absoluteString UTF8String];
     int length = strlen(uri);
-    char* uriWritable = new char[ length + 1]();
+    char* uriWritable = new char[length + 1]();
     strncpy(uriWritable, uri, length);
     uriChangedCallback(uriWritable);
 }
