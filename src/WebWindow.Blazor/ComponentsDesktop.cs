@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
@@ -114,11 +115,16 @@ namespace WebWindows.Blazor
 
         private static async Task RunAsync<TStartup>(IPC ipc, CancellationToken appLifetime)
         {
+            var configurationBuilder = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: true);
+
             DesktopJSRuntime = new DesktopJSRuntime(ipc);
             await PerformHandshakeAsync(ipc);
             AttachJsInterop(ipc, appLifetime);
 
             var serviceCollection = new ServiceCollection();
+            serviceCollection.AddSingleton<IConfiguration>(configurationBuilder.Build());
             serviceCollection.AddLogging(configure => configure.AddConsole());
             serviceCollection.AddSingleton<NavigationManager>(DesktopNavigationManager.Instance);
             serviceCollection.AddSingleton<IJSRuntime>(DesktopJSRuntime);
