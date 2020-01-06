@@ -18,7 +18,7 @@ didReceiveServerRedirectForProvisionalNavigation:(WKNavigation *)navigation;
     callUriChangedCallback(webView.URL.absoluteString);
 }
 
-- (void) callUriChangedCallback: (NSString) uri;
+- (void) callUriChangedCallback: (NSString *) uri;
 {
     int length = strlen(uri);
     char* uriWritable = new char[ length + 1]();
