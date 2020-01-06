@@ -99,7 +99,6 @@ void WebWindow::AttachWebView()
     
     uiDelegate->window = window;
     webView.UIDelegate = uiDelegate;
-    
     uiDelegate->webMessageReceivedCallback = _webMessageReceivedCallback;
     [userContentController addScriptMessageHandler:uiDelegate name:@"webwindowinterop"];
 
