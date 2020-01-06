@@ -18,7 +18,7 @@ didReceiveServerRedirectForProvisionalNavigation:(WKNavigation *)navigation;
     callUriChangedCallback([webView.URL.absoluteString UTF8String]);
 }
 
-void MyNavigationDelegate::callUriChangedCallback(const char* uri)
+- (void) callUriChangedCallback: (const char*) uri;
 {
     int length = strlen(uri);
     char* uriWritable = new char[ length + 1]();
