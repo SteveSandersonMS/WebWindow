@@ -276,5 +276,3 @@ void WebWindow::SetIconFile(AutoString filename)
         [[window standardWindowButton:NSWindowDocumentIconButton] setImage:icon];
     }
 }
-
-#endif
