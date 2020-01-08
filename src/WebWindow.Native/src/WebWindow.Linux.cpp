@@ -308,5 +308,3 @@ void WebWindow::SetIconFile(AutoString filename)
 {
 	gtk_window_set_icon_from_file(GTK_WINDOW(_window), filename, NULL);
 }
-
-#endif
