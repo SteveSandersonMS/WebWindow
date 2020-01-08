@@ -24,8 +24,8 @@
   <ItemGroup>
     <_NativeLibraries Include="$(NativeOutputDir)WebWindow.Native.dll" Condition="Exists('$(NativeOutputDir)WebWindow.Native.dll')" />
     <_NativeLibraries Include="$(NativeOutputDir)WebView2Loader.dll" Condition="Exists('$(NativeOutputDir)WebView2Loader.dll')" />
-    <_NativeLibraries Include="$(NativeOutputDir)WebWindow.Native.so" Condition="Exists('$(NativeOutputDir)WebWindow.Native.so')" />
-    <_NativeLibraries Include="$(NativeOutputDir)WebWindow.Native.dylib" Condition="Exists('$(NativeOutputDir)WebWindow.Native.dylib')" />
+    <_NativeLibraries Include="$(NativeOutputDir)libWebWindow.Native.so" Condition="Exists('$(NativeOutputDir)libWebWindow.Native.so')" />
+    <_NativeLibraries Include="$(NativeOutputDir)libWebWindow.Native.dylib" Condition="Exists('$(NativeOutputDir)libWebWindow.Native.dylib')" />
     <Content Include="@(_NativeLibraries)">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>%(Filename)%(Extension)</Link>
