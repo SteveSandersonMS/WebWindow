@@ -1,4 +1,3 @@
-#ifdef OS_MAC
 #include "WebWindow.h"
 #import "WebWindow.Mac.AppDelegate.h"
 #import "WebWindow.Mac.UiDelegate.h"
@@ -277,5 +276,3 @@ void WebWindow::SetIconFile(AutoString filename)
         [[window standardWindowButton:NSWindowDocumentIconButton] setImage:icon];
     }
 }
-
-#endif

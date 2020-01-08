@@ -2,6 +2,7 @@
 .vscode/
 bin/
 obj/
+builddir/
 *.user
 Debug/
 Release/
