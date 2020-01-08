@@ -19,7 +19,7 @@ namespace WebWindows.Blazor
             _webWindow.OnWebMessageReceived += HandleScriptNotify;
         }
 
-        public async Task Send(string eventName, params object[] args)
+        public void Send(string eventName, params object[] args)
         {
             try
             {

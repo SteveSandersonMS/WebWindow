@@ -6,13 +6,13 @@
 #include <comdef.h>
 #include <atomic>
 #include <Shlwapi.h>
+
 #define WM_USER_SHOWMESSAGE (WM_USER + 0x0001)
 #define WM_USER_INVOKE (WM_USER + 0x0002)
 
 using namespace Microsoft::WRL;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-LPWSTR Utf8ToLPWSTR(UTF8String str);
 LPCWSTR CLASS_NAME = L"WebWindow";
 std::mutex invokeLockMutex;
 HINSTANCE WebWindow::_hInstance;
@@ -27,8 +27,8 @@ struct InvokeWaitInfo
 
 struct ShowMessageParams
 {
-	LPCWSTR title;
-	LPCWSTR body;
+	std::wstring title;
+	std::wstring body;
 	UINT type;
 };
 
@@ -41,21 +41,20 @@ void WebWindow::Register(HINSTANCE hInstance)
 	wc.lpfnWndProc = WindowProc;
 	wc.hInstance = hInstance;
 	wc.lpszClassName = CLASS_NAME;
-	RegisterClassW(&wc);
+	RegisterClass(&wc);
 
 	SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE);
 }
 
-WebWindow::WebWindow(UTF8String title, WebWindow* parent, WebMessageReceivedCallback webMessageReceivedCallback)
+WebWindow::WebWindow(AutoString title, WebWindow* parent, WebMessageReceivedCallback webMessageReceivedCallback)
 {
 	// Create the window
 	_webMessageReceivedCallback = webMessageReceivedCallback;
 	_parent = parent;
-	LPCWSTR wtitle = Utf8ToLPWSTR(title);
-	_hWnd = CreateWindowExW(
+	_hWnd = CreateWindowEx(
 		0,                              // Optional window styles.
 		CLASS_NAME,                     // Window class
-		wtitle,							// Window text
+		title,							// Window text
 		WS_OVERLAPPEDWINDOW,            // Window style
 
 		// Size and position
@@ -66,9 +65,11 @@ WebWindow::WebWindow(UTF8String title, WebWindow* parent, WebMessageReceivedCall
 		_hInstance, // Instance handle
 		this        // Additional application data
 	);
-	delete[] wtitle;
 	hwndToWebWindow[_hWnd] = this;
 }
+
+// Needn't to release the handles.
+WebWindow::~WebWindow() {}
 
 HWND WebWindow::getHwnd()
 {
@@ -93,9 +94,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_USER_SHOWMESSAGE:
 	{
 		ShowMessageParams* params = (ShowMessageParams*)wParam;
-		MessageBoxW(hwnd, params->body, params->title, params->type);
-		delete params->title;
-		delete params->body;
+		MessageBox(hwnd, params->body.c_str(), params->title.c_str(), params->type);
 		delete params;
 		return 0;
 	}
@@ -118,10 +117,24 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		if (webWindow)
 		{
 			webWindow->RefitContent();
+			int width, height;
+			webWindow->GetSize(&width, &height);
+			webWindow->InvokeResized(width, height);
 		}
 		return 0;
 	}
-		break;
+	case WM_MOVE:
+	{
+		WebWindow* webWindow = hwndToWebWindow[hwnd];
+		if (webWindow)
+		{
+			int x, y;
+			webWindow->GetPosition(&x, &y);
+			webWindow->InvokeMoved(x, y);
+		}
+		return 0;
+	}
+	break;
 	}
 
 	return DefWindowProc(hwnd, uMsg, wParam, lParam);
@@ -137,11 +150,9 @@ void WebWindow::RefitContent()
 	}
 }
 
-void WebWindow::SetTitle(UTF8String title)
+void WebWindow::SetTitle(AutoString title)
 {
-	LPCWSTR wtitle = Utf8ToLPWSTR(title);
-	SetWindowTextW(_hWnd, wtitle);
-	delete[] wtitle;
+	SetWindowText(_hWnd, title);
 }
 
 void WebWindow::Show()
@@ -170,40 +181,24 @@ void WebWindow::WaitForExit()
 	}
 }
 
-void WebWindow::ShowMessage(UTF8String title, UTF8String body, UINT type)
+void WebWindow::ShowMessage(AutoString title, AutoString body, UINT type)
 {
-	ShowMessageParams *params = new ShowMessageParams;
-	params->title = Utf8ToLPWSTR(title);
-	params->body = Utf8ToLPWSTR(body);
+	ShowMessageParams* params = new ShowMessageParams;
+	params->title = title;
+	params->body = body;
 	params->type = type;
-	PostMessageW(_hWnd, WM_USER_SHOWMESSAGE, (WPARAM)params, 0);
+	PostMessage(_hWnd, WM_USER_SHOWMESSAGE, (WPARAM)params, 0);
 }
 
 void WebWindow::Invoke(ACTION callback)
 {
-	InvokeWaitInfo waitInfo = {};	
-	PostMessageW(_hWnd, WM_USER_INVOKE, (WPARAM)callback, (LPARAM)&waitInfo);
+	InvokeWaitInfo waitInfo = {};
+	PostMessage(_hWnd, WM_USER_INVOKE, (WPARAM)callback, (LPARAM)&waitInfo);
 
 	// Block until the callback is actually executed and completed
 	// TODO: Add return values, exception handling, etc.
 	std::unique_lock<std::mutex> uLock(invokeLockMutex);
 	waitInfo.completionNotifier.wait(uLock, [&] { return waitInfo.isCompleted; });
-}
-
-LPWSTR Utf8ToLPWSTR(UTF8String str)
-{
-	int wchars_num = MultiByteToWideChar(CP_UTF8, 0, str, -1, NULL, 0);
-	wchar_t* wstr = new wchar_t[wchars_num];
-	MultiByteToWideChar(CP_UTF8, 0, str, -1, wstr, wchars_num);
-	return wstr;
-}
-
-UTF8String LPWSTRToUtf8(LPWSTR str)
-{
-	int utf8chars_num = WideCharToMultiByte(CP_UTF8, 0, str, -1, NULL, 0, NULL, NULL);
-	char* utf8 = new char[utf8chars_num];
-	WideCharToMultiByte(CP_UTF8, 0, str, -1, utf8, utf8chars_num, NULL, NULL);
-	return utf8;
 }
 
 void WebWindow::AttachWebView()
@@ -236,12 +231,9 @@ void WebWindow::AttachWebView()
 						_webviewWindow->AddScriptToExecuteOnDocumentCreated(L"window.external = { sendMessage: function(message) { window.chrome.webview.postMessage(message); }, receiveMessage: function(callback) { window.chrome.webview.addEventListener(\'message\', function(e) { callback(e.data); }); } };", nullptr);
 						_webviewWindow->add_WebMessageReceived(Callback<IWebView2WebMessageReceivedEventHandler>(
 							[this](IWebView2WebView* webview, IWebView2WebMessageReceivedEventArgs* args) -> HRESULT {
-								PWSTR message;
+								wil::unique_cotaskmem_string message;
 								args->get_WebMessageAsString(&message);
-								UTF8String messageUtf8 = LPWSTRToUtf8(message);
-								_webMessageReceivedCallback(messageUtf8);
-								delete[] messageUtf8;
-								CoTaskMemFree(message);
+								_webMessageReceivedCallback(message.get());
 								return S_OK;
 							}).Get(), &webMessageToken);
 
@@ -252,41 +244,33 @@ void WebWindow::AttachWebView()
 								IWebView2WebResourceRequest* req;
 								args->get_Request(&req);
 
-								LPWSTR uri;
+								wil::unique_cotaskmem_string uri;
 								req->get_Uri(&uri);
-								UTF8String uriUtf8 = LPWSTRToUtf8(uri);
-								
-								std::string uriString(uriUtf8);
-								size_t colonPos = uriString.find(':', 0);
+								std::wstring uriString = uri.get();
+								size_t colonPos = uriString.find(L':', 0);
 								if (colonPos > 0)
 								{
-									std::string scheme = uriString.substr(0, colonPos);
+									std::wstring scheme = uriString.substr(0, colonPos);
 									WebResourceRequestedCallback handler = _schemeToRequestHandler[scheme];
 									if (handler != NULL)
 									{
 										int numBytes;
-										UTF8String contentType;
-										void* dotNetResponse = handler(uriUtf8, &numBytes, &contentType);
+										AutoString contentType;
+										wil::unique_cotaskmem dotNetResponse(handler(uriString.c_str(), &numBytes, &contentType));
 
 										if (dotNetResponse != nullptr && contentType != nullptr)
 										{
-											LPWSTR contentTypeW = Utf8ToLPWSTR(contentType);
-											std::wstring contentTypeWS(contentTypeW);
+											std::wstring contentTypeWS = contentType;
 
-											IStream* dataStream = SHCreateMemStream((byte*)dotNetResponse, numBytes);
+											IStream* dataStream = SHCreateMemStream((BYTE*)dotNetResponse.get(), numBytes);
 											wil::com_ptr<IWebView2WebResourceResponse> response;
 											_webviewEnvironment->CreateWebResourceResponse(
 												dataStream, 200, L"OK", (L"Content-Type: " + contentTypeWS).c_str(),
 												&response);
 											args->put_Response(response.get());
-											CoTaskMemFree(dotNetResponse);
-											delete[] contentTypeW;
 										}
 									}
 								}
-
-								delete[] uriUtf8;
-								CoTaskMemFree(uri);
 
 								return S_OK;
 							}
@@ -319,28 +303,101 @@ void WebWindow::AttachWebView()
 	}
 }
 
-void WebWindow::NavigateToUrl(UTF8String url)
+void WebWindow::NavigateToUrl(AutoString url)
 {
-	LPCWSTR urlW = Utf8ToLPWSTR(url);
-	_webviewWindow->Navigate(urlW);
-	delete[] urlW;
+	_webviewWindow->Navigate(url);
 }
 
-void WebWindow::NavigateToString(UTF8String content)
+void WebWindow::NavigateToString(AutoString content)
 {
-	LPCWSTR contentW = Utf8ToLPWSTR(content);
-	_webviewWindow->NavigateToString(contentW);
-	delete[] contentW;
+	_webviewWindow->NavigateToString(content);
 }
 
-void WebWindow::SendMessage(UTF8String message)
+void WebWindow::SendMessage(AutoString message)
 {
-	LPCWSTR messageW = Utf8ToLPWSTR(message);
-	_webviewWindow->PostWebMessageAsString(messageW);
-	delete[] messageW;
+	_webviewWindow->PostWebMessageAsString(message);
 }
 
-void WebWindow::AddCustomScheme(UTF8String scheme, WebResourceRequestedCallback requestHandler)
+void WebWindow::AddCustomScheme(AutoString scheme, WebResourceRequestedCallback requestHandler)
 {
 	_schemeToRequestHandler[scheme] = requestHandler;
+}
+
+void WebWindow::SetResizable(bool resizable)
+{
+	LONG_PTR style = GetWindowLongPtr(_hWnd, GWL_STYLE);
+	if (resizable) style |= WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
+	else style &= (~WS_THICKFRAME) & (~WS_MINIMIZEBOX) & (~WS_MAXIMIZEBOX);
+	SetWindowLongPtr(_hWnd, GWL_STYLE, style);
+}
+
+void WebWindow::GetSize(int* width, int* height)
+{
+	RECT rect = {};
+	GetWindowRect(_hWnd, &rect);
+	if (width) *width = rect.right - rect.left;
+	if (height) *height = rect.bottom - rect.top;
+}
+
+void WebWindow::SetSize(int width, int height)
+{
+	SetWindowPos(_hWnd, HWND_TOP, 0, 0, width, height, SWP_NOMOVE | SWP_NOZORDER);
+}
+
+BOOL MonitorEnum(HMONITOR monitor, HDC, LPRECT, LPARAM arg)
+{
+	auto callback = (GetAllMonitorsCallback)arg;
+	MONITORINFO info = {};
+	info.cbSize = sizeof(MONITORINFO);
+	GetMonitorInfo(monitor, &info);
+	Monitor props = {};
+	props.monitor.x = info.rcMonitor.left;
+	props.monitor.y = info.rcMonitor.top;
+	props.monitor.width = info.rcMonitor.right - info.rcMonitor.left;
+	props.monitor.height = info.rcMonitor.bottom - info.rcMonitor.top;
+	props.work.x = info.rcWork.left;
+	props.work.y = info.rcWork.top;
+	props.work.width = info.rcWork.right - info.rcWork.left;
+	props.work.height = info.rcWork.bottom - info.rcWork.top;
+	return callback(&props) ? TRUE : FALSE;
+}
+
+void WebWindow::GetAllMonitors(GetAllMonitorsCallback callback)
+{
+	if (callback)
+	{
+		EnumDisplayMonitors(NULL, NULL, MonitorEnum, (LPARAM)callback);
+	}
+}
+
+unsigned int WebWindow::GetScreenDpi()
+{
+	return GetDpiForWindow(_hWnd);
+}
+
+void WebWindow::GetPosition(int* x, int* y)
+{
+	RECT rect = {};
+	GetWindowRect(_hWnd, &rect);
+	if (x) *x = rect.left;
+	if (y) *y = rect.top;
+}
+
+void WebWindow::SetPosition(int x, int y)
+{
+	SetWindowPos(_hWnd, HWND_TOP, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+}
+
+void WebWindow::SetTopmost(bool topmost)
+{
+	SetWindowPos(_hWnd, topmost ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+}
+
+void WebWindow::SetIconFile(AutoString filename)
+{
+	HICON icon = (HICON)LoadImage(NULL, filename, IMAGE_ICON, 0, 0, LR_LOADFROMFILE);
+	if (icon)
+	{
+		::SendMessage(_hWnd, WM_SETICON, ICON_SMALL, (LPARAM)icon);
+	}
 }

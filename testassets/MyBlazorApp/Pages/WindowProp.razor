@@ -1,0 +1,71 @@
+﻿@page "/window"
+@inject WebWindow Window
+
+<h1>Window properties</h1>
+<h2>Screen size</h2>
+<p>DPI: @Window.ScreenDpi</p>
+@foreach (var (m, i) in Window.Monitors.Select((monitor, index) => (monitor, index)))
+{
+    <p>Monitor @i: Width: @m.MonitorArea.Width, Height: @m.MonitorArea.Height</p>
+}
+<h2>Window size</h2>
+<form class="form-row">
+    <div class="col form-group">
+        <label for="inputWidth">Width</label>
+        <input type="number" class="form-control" id="inputWidth" @bind="@Window.Width" />
+    </div>
+    <div class="col form-group">
+        <label for="inputHeight">Height</label>
+        <input type="number" class="form-control" id="inputHeight" @bind="@Window.Height" />
+    </div>
+</form>
+<h2>Window location</h2>
+<form class="form-row">
+    <div class="col form-group">
+        <label for="inputLeft">Left</label>
+        <input type="number" class="form-control" id="inputLeft" @bind="@Window.Left" />
+    </div>
+    <div class="col form-group">
+        <label for="inputTop">Top</label>
+        <input type="number" class="form-control" id="inputTop" @bind="@Window.Top" />
+    </div>
+</form>
+<h2>Window properties</h2>
+<form>
+    <div class="col form-check">
+        <input type="checkbox" class="form-check-input" id="checkResizable" @bind="@Window.Resizable" />
+        <label class="form-check-label" for="checkResizable">Resizable</label>
+    </div>
+    <div class="col form-check">
+        <input type="checkbox" class="form-check-input" id="checkTopmost" @bind="@Window.Topmost" />
+        <label class="form-check-label" for="checkTopmost">Topmost</label>
+    </div>
+</form>
+<h2>Icon</h2>
+<div>
+    <div class="col form-group">
+        <label for="inputIcon">Icon file</label>
+        <input type="text" class="form-control" id="inputIcon" @bind="@iconFilename" />
+    </div>
+    <div class="col form-group">
+        <button class="btn btn-primary" @onclick="ChangeIconFile">Change</button>
+    </div>
+</div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        Window.SizeChanged += async (sender, e) => await Task.Run(StateHasChanged);
+        Window.LocationChanged += async (sender, e) => await Task.Run(StateHasChanged);
+    }
+
+    string iconFilename;
+
+    void ChangeIconFile()
+    {
+        if (!string.IsNullOrEmpty(iconFilename))
+        {
+            Window.SetIconFile(iconFilename);
+        }
+    }
+}
