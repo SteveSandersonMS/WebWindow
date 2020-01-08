@@ -6,7 +6,7 @@
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <TargetFramework>netstandard2.1</TargetFramework>
     <NativeOutputDir Condition="'$(OS)' == 'Windows_NT'">..\WebWindow.Native\x64\$(Configuration)\</NativeOutputDir>
-    <NativeOutputDir Condition="'$(OS)' != 'Windows_NT'">..\WebWindow.Native\builddir\$(Configuration)\x64\</NativeOutputDir>
+    <NativeOutputDir Condition="'$(OS)' != 'Windows_NT'">..\WebWindow.Native\builddir\$(Configuration)\any\</NativeOutputDir>
     <IsMacOS>$([MSBuild]::IsOsPlatform('OSX'))</IsMacOS>
     <NativeAssetRuntimeIdentifier Condition="'$(OS)' == 'Windows_NT'" >win-x64</NativeAssetRuntimeIdentifier>
     <NativeAssetRuntimeIdentifier Condition="'$(OS)' != 'Windows_NT' AND '$(IsMacOS)' != 'true'" >linux-x64</NativeAssetRuntimeIdentifier>
