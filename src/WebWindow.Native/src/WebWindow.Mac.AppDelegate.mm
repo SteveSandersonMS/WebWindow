@@ -13,6 +13,10 @@
     [NSApp activateIgnoringOtherApps:YES];
 }
 
+- (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)sender {
+    return true;
+}
+
 - (void)dealloc {
     [window release];
     [super dealloc];
