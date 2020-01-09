@@ -90,6 +90,7 @@ namespace WebWindows.Blazor
                 case ".html": return "text/html";
                 case ".css": return "text/css";
                 case ".js": return "text/javascript";
+                case ".wasm": return "application/wasm";
             }
             return "application/octet-stream";
         }
