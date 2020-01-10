@@ -228,15 +228,16 @@ void WebWindow::AttachWebView()
                         // Add a navigation change event handler
 						EventRegistrationToken token;
                         _webviewWindow->add_NavigationStarting(Callback<IWebView2NavigationStartingEventHandler>(
-                            [this](IWebView2WebView* webview, IWebView2NavigationStartingEventArgs * args) -> HRESULT {
+                            [this](IWebView2WebView* webview, IWebView2NavigationStartingEventArgs * args) -> HRESULT 
+                            {
                                 PWSTR uri;
                                 args->get_Uri(&uri);
                                 _uriChangeCallback(uri);
                                 CoTaskMemFree(uri);
                                 return S_OK;
-                            }).Get(), &token);
-                        
-                        
+                            }
+                        ).Get(), &token);
+                                                
 						// Register interop APIs
 						EventRegistrationToken webMessageToken;
 						_webviewWindow->AddScriptToExecuteOnDocumentCreated(L"window.external = { sendMessage: function(message) { window.chrome.webview.postMessage(message); }, receiveMessage: function(callback) { window.chrome.webview.addEventListener(\'message\', function(e) { callback(e.data); }); } };", nullptr);

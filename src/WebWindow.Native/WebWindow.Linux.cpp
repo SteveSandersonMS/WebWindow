@@ -76,8 +76,7 @@ void HandleWebMessage(WebKitUserContentManager* contentManager, WebKitJavascript
 void HandleUriChange(GObject* object, WebKitLoadEvent event, gpointer user_data)
 {
     WebKitWebView *web_view;
-    
-    
+        
     const gchar *uri;
     
     if (event == WEBKIT_LOAD_FINISHED) {
@@ -87,7 +86,6 @@ void HandleUriChange(GObject* object, WebKitLoadEvent event, gpointer user_data)
         UriChangeCallback callback = (UriChangeCallback)user_data;
         callback(AutoString(uri));
     }
-    
 }
 
 void WebWindow::Show()
@@ -172,7 +170,6 @@ void WebWindow::ShowMessage(AutoString title, AutoString body, unsigned int type
 	gtk_dialog_run(GTK_DIALOG(dialog));
 	gtk_widget_destroy(dialog);
 }
-
 
 void WebWindow::NavigateToUrl(AutoString url)
 {
