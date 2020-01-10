@@ -230,10 +230,9 @@ void WebWindow::AttachWebView()
                         _webviewWindow->add_NavigationStarting(Callback<IWebView2NavigationStartingEventHandler>(
                             [this](IWebView2WebView* webview, IWebView2NavigationStartingEventArgs * args) -> HRESULT 
                             {
-                                PWSTR uri;
+                                wil::unique_cotaskmem_string uri;
                                 args->get_Uri(&uri);
-                                _uriChangeCallback(uri);
-                                CoTaskMemFree(uri);
+                                _uriChangeCallback(uri.get());
                                 return S_OK;
                             }
                         ).Get(), &token);
