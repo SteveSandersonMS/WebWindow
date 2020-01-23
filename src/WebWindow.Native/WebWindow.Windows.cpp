@@ -214,11 +214,11 @@ void WebWindow::AttachWebView()
 
 		// Create a WebView, whose parent is the main window hWnd
 		env->CreateWebView(_hWnd, Callback<IWebView2CreateWebViewCompletedHandler>(
-			[&, this](HRESULT result, IWebView2WebView5* webview) -> HRESULT
+			[&, this](HRESULT result, IWebView2WebView* webview) -> HRESULT
 		{
 			if (webview != nullptr)
 			{
-				_webviewWindow = webview;
+				_webviewWindow = static_cast<IWebView2WebView5*>(webview);
 			}
 
 			// Add a few settings for the webview
