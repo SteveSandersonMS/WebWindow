@@ -65,6 +65,9 @@ WebWindow::WebWindow(AutoString title, WebWindow* parent, WebMessageReceivedCall
 		_hInstance, // Instance handle
 		this        // Additional application data
 	);
+
+	//SetWindowLong(_hWnd, GWL_STYLE, 0);
+
 	hwndToWebWindow[_hWnd] = this;
 }
 
@@ -234,7 +237,7 @@ void WebWindow::AttachWebView()
 			_webviewWindow->AddScriptToExecuteOnDocumentCreated(L"window.external = { sendMessage: function(message) { window.chrome.webview.postMessage(message); }, receiveMessage: function(callback) { window.chrome.webview.addEventListener(\'message\', function(e) { callback(e.data); }); } };", nullptr);
 
 			_webviewWindow->add_WebMessageReceived(Callback<IWebView2WebMessageReceivedEventHandler>(
-				[this](IWebView2WebView* webview, IWebView2WebMessageReceivedEventArgs* args) -> HRESULT
+			[this](IWebView2WebView* webview, IWebView2WebMessageReceivedEventArgs* args) -> HRESULT
 			{
 				wil::unique_cotaskmem_string message;
 				args->get_WebMessageAsString(&message);
@@ -246,8 +249,8 @@ void WebWindow::AttachWebView()
 			_webviewWindow->AddWebResourceRequestedFilter(L"*", WEBVIEW2_WEB_RESOURCE_CONTEXT_ALL);
 
 			_webviewWindow->add_WebResourceRequested(
-				Callback<IWebView2WebResourceRequestedEventHandler>(
-					[this](IWebView2WebView* sender, IWebView2WebResourceRequestedEventArgs* args)
+			Callback<IWebView2WebResourceRequestedEventHandler>(
+			[this](IWebView2WebView* sender, IWebView2WebResourceRequestedEventArgs* args)
 			{
 				IWebView2WebResourceRequest* req;
 				args->get_Request(&req);
@@ -278,8 +281,7 @@ void WebWindow::AttachWebView()
 
 							wil::com_ptr<IWebView2WebResourceResponse> response;
 
-							_webviewEnvironment->CreateWebResourceResponse(
-								dataStream, 200, L"OK", (L"Content-Type: " + contentTypeWS).c_str(), &response);
+							_webviewEnvironment->CreateWebResourceResponse(dataStream, 200, L"OK", (L"Content-Type: " + contentTypeWS).c_str(), &response);
 
 							args->put_Response(response.get());
 						}

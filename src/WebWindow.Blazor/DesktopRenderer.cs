@@ -31,8 +31,8 @@ namespace WebWindows.Blazor
             _writeMethod = _writer.GetMethod("Write", new[] { typeof(RenderBatch).MakeByRefType() });
         }
 
-        public DesktopRenderer(IServiceProvider serviceProvider, IPC ipc, ILoggerFactory loggerFactory)
-            : base(serviceProvider, loggerFactory)
+        public DesktopRenderer(IServiceProvider serviceProvider,
+        IPC ipc, ILoggerFactory loggerFactory) : base(serviceProvider, loggerFactory)
         {
             _ipc = ipc ?? throw new ArgumentNullException(nameof(ipc));
             _jsRuntime = serviceProvider.GetRequiredService<IJSRuntime>();
@@ -49,8 +49,7 @@ namespace WebWindows.Blazor
         /// </summary>
         /// <typeparam name="TComponent">The type of the component.</typeparam>
         /// <param name="domElementSelector">A CSS selector that uniquely identifies a DOM element.</param>
-        public Task AddComponentAsync<TComponent>(string domElementSelector)
-            where TComponent : IComponent
+        public Task AddComponentAsync<TComponent>(string domElementSelector) where TComponent : IComponent
         {
             return AddComponentAsync(typeof(TComponent), domElementSelector);
         }

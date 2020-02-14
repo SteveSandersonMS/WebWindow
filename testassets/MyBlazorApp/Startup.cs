@@ -1,5 +1,5 @@
-using Microsoft.AspNetCore.Components.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using WebWindows.Blazor;
 
 namespace MyBlazorApp
 {

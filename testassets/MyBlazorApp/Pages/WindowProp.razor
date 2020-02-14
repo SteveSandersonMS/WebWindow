@@ -3,6 +3,9 @@
 
 <h1>Window properties</h1>
 <h2>Screen size</h2>
+<div draggable="true" dropzone="move" @ondragend="OnDragEnd"
+     style="height:60px; min-width: 300px; background-color:red;">
+</div>
 <p>DPI: @Window.ScreenDpi</p>
 @foreach (var (m, i) in Window.Monitors.Select((monitor, index) => (monitor, index)))
 {
@@ -61,11 +64,20 @@
 
     string iconFilename;
 
+    bool MouseIsDonwn = false;
+
+
     void ChangeIconFile()
     {
         if (!string.IsNullOrEmpty(iconFilename))
         {
             Window.SetIconFile(iconFilename);
         }
+    }
+
+    void OnDragEnd(DragEventArgs e)
+    {
+        Window.Left = (int)e.ScreenX;
+        Window.Top = (int)e.ScreenY;
     }
 }

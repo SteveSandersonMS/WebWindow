@@ -25,10 +25,7 @@ namespace WebWindows.Blazor
 
         public static void Run<TStartup>(string windowTitle, string hostHtmlPath)
         {
-            DesktopSynchronizationContext.UnhandledException += (sender, exception) =>
-            {
-                UnhandledException(exception);
-            };
+            DesktopSynchronizationContext.UnhandledException += (sender, exception) => UnhandledException(exception);
 
             WebWindow = new WebWindow(windowTitle, options =>
             {
@@ -38,11 +35,11 @@ namespace WebWindows.Blazor
                 {
                     // TODO: Only intercept for the hostname 'app' and passthrough for others
                     // TODO: Prevent directory traversal?
-                    var appFile = Path.Combine(contentRootAbsolute, new Uri(url).AbsolutePath.Substring(1));
+                    var abslt_path = new Uri(url).AbsolutePath.Substring(1);
+                    var appFile = Path.Combine(contentRootAbsolute, abslt_path);
+
                     if (appFile == contentRootAbsolute)
-                    {
                         appFile = hostHtmlPath;
-                    }
 
                     contentType = GetContentType(appFile);
                     return File.Exists(appFile) ? File.OpenRead(appFile) : null;
@@ -57,6 +54,7 @@ namespace WebWindows.Blazor
             });
 
             CancellationTokenSource appLifetimeCts = new CancellationTokenSource();
+
             Task.Factory.StartNew(async () =>
             {
                 try
@@ -85,12 +83,14 @@ namespace WebWindows.Blazor
         private static string GetContentType(string url)
         {
             var ext = Path.GetExtension(url);
+
             switch (ext)
             {
                 case ".html": return "text/html";
-                case ".css": return "text/css";
-                case ".js": return "text/javascript";
+                case ".css" : return "text/css";
+                case ".js"  : return "text/javascript";
             }
+
             return "application/octet-stream";
         }
 
@@ -123,33 +123,29 @@ namespace WebWindows.Blazor
             await PerformHandshakeAsync(ipc);
             AttachJsInterop(ipc, appLifetime);
 
-            var serviceCollection = new ServiceCollection();
-            serviceCollection.AddSingleton<IConfiguration>(configurationBuilder.Build());
-            serviceCollection.AddLogging(configure => configure.AddConsole());
-            serviceCollection.AddSingleton<NavigationManager>(DesktopNavigationManager.Instance);
-            serviceCollection.AddSingleton<IJSRuntime>(DesktopJSRuntime);
-            serviceCollection.AddSingleton<INavigationInterception, DesktopNavigationInterception>();
-            serviceCollection.AddSingleton(WebWindow);
+            var service_collection = new ServiceCollection();
+            service_collection.AddSingleton<IConfiguration>(configurationBuilder.Build());
+            service_collection.AddLogging(configure => configure.AddConsole());
+            service_collection.AddSingleton<NavigationManager>(DesktopNavigationManager.Instance);
+            service_collection.AddSingleton<IJSRuntime>(DesktopJSRuntime);
+            service_collection.AddSingleton<INavigationInterception, DesktopNavigationInterception>();
+            service_collection.AddSingleton(WebWindow);
 
             var startup = new ConventionBasedStartup(Activator.CreateInstance(typeof(TStartup)));
-            startup.ConfigureServices(serviceCollection);
+            startup.ConfigureServices(service_collection);
 
-            var services = serviceCollection.BuildServiceProvider();
-            var builder = new DesktopApplicationBuilder(services);
+            var services = service_collection.BuildServiceProvider();
+            var builder = new ComponentsApplicationBuilder(services);
             startup.Configure(builder, services);
 
             var loggerFactory = services.GetRequiredService<ILoggerFactory>();
 
             DesktopRenderer = new DesktopRenderer(services, ipc, loggerFactory);
-            DesktopRenderer.UnhandledException += (sender, exception) =>
-            {
-                Console.Error.WriteLine(exception);
-            };
+
+            DesktopRenderer.UnhandledException += (sender, exception) => Console.Error.WriteLine(exception);
 
             foreach (var rootComponent in builder.Entries)
-            {
-                _ = DesktopRenderer.AddComponentAsync(rootComponent.componentType, rootComponent.domElementSelector);
-            }
+                _ = DesktopRenderer.AddComponentAsync(rootComponent.component_type, rootComponent.dom_element_selector);
         }
 
         private static Stream SupplyFrameworkFile(string uri)

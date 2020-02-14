@@ -1,8 +1,6 @@
 ﻿using Microsoft.JSInterop;
 using Microsoft.JSInterop.Infrastructure;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace WebWindows.Blazor

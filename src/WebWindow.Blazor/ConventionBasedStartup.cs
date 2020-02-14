@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Components.Builder;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Diagnostics;
 using System.Linq;
@@ -22,16 +21,19 @@ namespace WebWindows.Blazor
             try
             {
                 var method = GetConfigureMethod();
+
                 Debug.Assert(method != null);
 
                 var parameters = method.GetParameters();
+
                 var arguments = new object[parameters.Length];
+
                 for (var i = 0; i < parameters.Length; i++)
                 {
                     var parameter = parameters[i];
+
                     arguments[i] = parameter.ParameterType == typeof(IComponentsApplicationBuilder)
-                        ? app
-                        : services.GetRequiredService(parameter.ParameterType);
+                    ? app : services.GetRequiredService(parameter.ParameterType);
                 }
 
                 method.Invoke(Instance, arguments);
@@ -39,9 +41,7 @@ namespace WebWindows.Blazor
             catch (Exception ex)
             {
                 if (ex is TargetInvocationException)
-                {
                     ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
-                }
 
                 throw;
             }
@@ -55,17 +55,11 @@ namespace WebWindows.Blazor
                 .ToArray();
 
             if (methods.Length == 1)
-            {
                 return methods[0];
-            }
             else if (methods.Length == 0)
-            {
                 throw new InvalidOperationException("The startup class must define a 'Configure' method.");
-            }
             else
-            {
                 throw new InvalidOperationException("Overloading the 'Configure' method is not supported.");
-            }
         }
 
         public void ConfigureServices(IServiceCollection services)
@@ -73,17 +67,14 @@ namespace WebWindows.Blazor
             try
             {
                 var method = GetConfigureServicesMethod();
+
                 if (method != null)
-                {
                     method.Invoke(Instance, new object[] { services });
-                }
             }
             catch (Exception ex)
             {
                 if (ex is TargetInvocationException)
-                {
                     ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
-                }
 
                 throw;
             }
@@ -92,12 +83,8 @@ namespace WebWindows.Blazor
         internal MethodInfo GetConfigureServicesMethod()
         {
             return Instance.GetType()
-                .GetMethod(
-                    "ConfigureServices",
-                    BindingFlags.Public | BindingFlags.Instance,
-                    null,
-                    new Type[] { typeof(IServiceCollection), },
-                    Array.Empty<ParameterModifier>());
+                   .GetMethod("ConfigureServices", BindingFlags.Public | BindingFlags.Instance,
+                    null, new Type[] { typeof(IServiceCollection), }, Array.Empty<ParameterModifier>());
         }
     }
 }
