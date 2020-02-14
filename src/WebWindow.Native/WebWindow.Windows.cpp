@@ -238,7 +238,7 @@ void WebWindow::AttachWebView()
 							}).Get(), &webMessageToken);
 
 						EventRegistrationToken webResourceRequestedToken;
-						_webviewWindow->add_WebResourceRequested(nullptr, nullptr, 0, Callback<IWebView2WebResourceRequestedEventHandler>(
+						_webviewWindow->add_WebResourceRequested_deprecated(nullptr, nullptr, 0, Callback<IWebView2WebResourceRequestedEventHandler>(
 							[this](IWebView2WebView* sender, IWebView2WebResourceRequestedEventArgs* args)
 							{
 								IWebView2WebResourceRequest* req;
