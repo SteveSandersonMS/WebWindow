@@ -118,7 +118,7 @@ jobs:
   # 2. For security, you *must* ensure that 'Make secrets available to builds of forks'
   #    is disabled in your PR validation settings (inside build -> Edit -> Triggers).
   #    Otherwise, PRs would be able to push new packages even without being merged.
-  - job: 'Publish to NuGet'
+  - job: 'PublishToNuGet'
     dependsOn: 'CombinePackages'
     steps:
     - task: NuGetCommand@2
