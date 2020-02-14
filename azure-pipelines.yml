@@ -110,3 +110,22 @@ jobs:
         PathtoPublish: 'combined'
         ArtifactName: 'artifacts-combined'
         publishLocation: 'Container'
+
+  # Uploads the NuGet package file to nuget.org
+  # Important notes:
+  # 1. For this to work, you need to create a 'service connection' with the same name
+  #    as the 'publishFeedCredentials' value.
+  # 2. For security, you *must* ensure that 'Make secrets available to builds of forks'
+  #    is disabled in your PR validation settings (inside build -> Edit -> Triggers).
+  #    Otherwise, PRs would be able to push new packages even without being merged.
+  - job: 'Publish to NuGet'
+    dependsOn: 'CombinePackages'
+    steps:
+    - task: NuGetCommand@2
+      displayName: 'Publish to nuget.org'
+      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+      inputs:
+        command: push
+        packagesToPush: 'artifacts-combined/**/*.nupkg'
+        nuGetFeedType: external
+        publishFeedCredentials: 'WebWindowNuGet'
