@@ -130,6 +130,6 @@ jobs:
       condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
       inputs:
         command: push
-        packagesToPush: 'artifacts/*.nupkg'
+        packagesToPush: 'artifacts/artifacts-combined/*.nupkg'
         nuGetFeedType: external
         publishFeedCredentials: 'WebWindowNuGet'
