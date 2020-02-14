@@ -209,14 +209,18 @@ void WebWindow::AttachWebView()
 	HRESULT envResult = CreateWebView2EnvironmentWithDetails(nullptr, nullptr, nullptr,
 		Callback<IWebView2CreateWebView2EnvironmentCompletedHandler>(
 			[&, this](HRESULT result, IWebView2Environment* env) -> HRESULT {
-				_webviewEnvironment = env;
+				HRESULT envResult = env->QueryInterface(&_webviewEnvironment);
+				if (envResult != S_OK)
+				{
+					return envResult;
+				}
 
 				// Create a WebView, whose parent is the main window hWnd
 				env->CreateWebView(_hWnd, Callback<IWebView2CreateWebViewCompletedHandler>(
 					[&, this](HRESULT result, IWebView2WebView* webview) -> HRESULT {
-						if (webview != nullptr) {
-							_webviewWindow = webview;
-						}
+						if (result != S_OK) { return result; }
+						result = webview->QueryInterface(&_webviewWindow);
+						if (result != S_OK) { return result; }
 
 						// Add a few settings for the webview
 						// this is a redundant demo step as they are the default settings values
@@ -238,7 +242,7 @@ void WebWindow::AttachWebView()
 							}).Get(), &webMessageToken);
 
 						EventRegistrationToken webResourceRequestedToken;
-						_webviewWindow->add_WebResourceRequested_deprecated(nullptr, nullptr, 0, Callback<IWebView2WebResourceRequestedEventHandler>(
+						_webviewWindow->add_WebResourceRequested(Callback<IWebView2WebResourceRequestedEventHandler>(
 							[this](IWebView2WebView* sender, IWebView2WebResourceRequestedEventArgs* args)
 							{
 								IWebView2WebResourceRequest* req;
