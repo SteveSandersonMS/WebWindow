@@ -1,5 +1,5 @@
-using Microsoft.AspNetCore.Components.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using WebWindows.Blazor;
 
 namespace MyBlazorApp
 {
@@ -9,7 +9,7 @@ namespace MyBlazorApp
         {
         }
 
-        public void Configure(IComponentsApplicationBuilder app)
+        public void Configure(DesktopApplicationBuilder app)
         {
             app.AddComponent<App>("app");
         }

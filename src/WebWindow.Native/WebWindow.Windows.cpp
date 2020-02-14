@@ -242,6 +242,7 @@ void WebWindow::AttachWebView()
 							}).Get(), &webMessageToken);
 
 						EventRegistrationToken webResourceRequestedToken;
+						_webviewWindow->AddWebResourceRequestedFilter(L"*", WEBVIEW2_WEB_RESOURCE_CONTEXT_ALL);
 						_webviewWindow->add_WebResourceRequested(Callback<IWebView2WebResourceRequestedEventHandler>(
 							[this](IWebView2WebView* sender, IWebView2WebResourceRequestedEventArgs* args)
 							{

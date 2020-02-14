@@ -1,10 +1,10 @@
-﻿using Microsoft.AspNetCore.Components.Builder;
+﻿using Microsoft.AspNetCore.Components;
 using System;
 using System.Collections.Generic;
 
 namespace WebWindows.Blazor
 {
-    internal class DesktopApplicationBuilder : IComponentsApplicationBuilder
+    public class DesktopApplicationBuilder
     {
         public DesktopApplicationBuilder(IServiceProvider services)
         {
@@ -30,5 +30,8 @@ namespace WebWindows.Blazor
 
             Entries.Add((componentType, domElementSelector));
         }
+
+        public void AddComponent<T>(string domElementSelector) where T : IComponent
+            => AddComponent(typeof(T), domElementSelector);
     }
 }
