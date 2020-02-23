@@ -2,8 +2,10 @@
 
   <PropertyGroup>
     <Title>WebWindow</Title>
+    <PackageId>WebWindow</PackageId>
     <PackageDescription>Open native OS windows hosting web UI on Windows, Mac, and Linux</PackageDescription>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/SteveSandersonMS/WebWindow</RepositoryUrl>
     <TargetFramework>netstandard2.1</TargetFramework>
     <NativeOutputDir>..\WebWindow.Native\x64\$(Configuration)\</NativeOutputDir>
     <IsMacOS>$([MSBuild]::IsOsPlatform('OSX'))</IsMacOS>
