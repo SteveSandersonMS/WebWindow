@@ -206,9 +206,9 @@ void WebWindow::AttachWebView()
 	std::atomic_flag flag = ATOMIC_FLAG_INIT;
 	flag.test_and_set();
 
-	HRESULT envResult = CreateWebView2EnvironmentWithDetails(nullptr, nullptr, nullptr,
-		Callback<IWebView2CreateWebView2EnvironmentCompletedHandler>(
-			[&, this](HRESULT result, IWebView2Environment* env) -> HRESULT {
+	HRESULT envResult = CreateCoreWebView2EnvironmentWithDetails(nullptr, nullptr, nullptr,
+		Callback<ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler>(
+			[&, this](HRESULT result, ICoreWebView2Environment* env) -> HRESULT {
 				HRESULT envResult = env->QueryInterface(&_webviewEnvironment);
 				if (envResult != S_OK)
 				{
@@ -216,37 +216,39 @@ void WebWindow::AttachWebView()
 				}
 
 				// Create a WebView, whose parent is the main window hWnd
-				env->CreateWebView(_hWnd, Callback<IWebView2CreateWebViewCompletedHandler>(
-					[&, this](HRESULT result, IWebView2WebView* webview) -> HRESULT {
+				env->CreateCoreWebView2Host(_hWnd, Callback<ICoreWebView2CreateCoreWebView2HostCompletedHandler>(
+					[&, this](HRESULT result, ICoreWebView2Host* webview) -> HRESULT {
 						if (result != S_OK) { return result; }
 						result = webview->QueryInterface(&_webviewWindow);
 						if (result != S_OK) { return result; }
 
 						// Add a few settings for the webview
 						// this is a redundant demo step as they are the default settings values
-						IWebView2Settings* Settings;
+						ICoreWebView2Settings* Settings;
 						_webviewWindow->get_Settings(&Settings);
 						Settings->put_IsScriptEnabled(TRUE);
 						Settings->put_AreDefaultScriptDialogsEnabled(TRUE);
 						Settings->put_IsWebMessageEnabled(TRUE);
+						Settings->put_AreDevToolsEnabled(FALSE);
+						Settings->put_AreDefaultContextMenusEnabled(FALSE);
 
 						// Register interop APIs
 						EventRegistrationToken webMessageToken;
 						_webviewWindow->AddScriptToExecuteOnDocumentCreated(L"window.external = { sendMessage: function(message) { window.chrome.webview.postMessage(message); }, receiveMessage: function(callback) { window.chrome.webview.addEventListener(\'message\', function(e) { callback(e.data); }); } };", nullptr);
-						_webviewWindow->add_WebMessageReceived(Callback<IWebView2WebMessageReceivedEventHandler>(
-							[this](IWebView2WebView* webview, IWebView2WebMessageReceivedEventArgs* args) -> HRESULT {
+						_webviewWindow->add_WebMessageReceived(Callback<ICoreWebView2WebMessageReceivedEventHandler>(
+							[this](ICoreWebView2* webview, ICoreWebView2WebMessageReceivedEventArgs* args) -> HRESULT {
 								wil::unique_cotaskmem_string message;
-								args->get_WebMessageAsString(&message);
+								args->TryGetWebMessageAsString(&message);
 								_webMessageReceivedCallback(message.get());
 								return S_OK;
 							}).Get(), &webMessageToken);
 
 						EventRegistrationToken webResourceRequestedToken;
-						_webviewWindow->AddWebResourceRequestedFilter(L"*", WEBVIEW2_WEB_RESOURCE_CONTEXT_ALL);
-						_webviewWindow->add_WebResourceRequested(Callback<IWebView2WebResourceRequestedEventHandler>(
-							[this](IWebView2WebView* sender, IWebView2WebResourceRequestedEventArgs* args)
+						_webviewWindow->AddWebResourceRequestedFilter(L"*", CORE_WEBVIEW2_WEB_RESOURCE_CONTEXT_ALL);
+						_webviewWindow->add_WebResourceRequested(Callback<ICoreWebView2WebResourceRequestedEventHandler>(
+							[this](ICoreWebView2* sender, ICoreWebView2WebResourceRequestedEventArgs* args)
 							{
-								IWebView2WebResourceRequest* req;
+								ICoreWebView2WebResourceRequest* req;
 								args->get_Request(&req);
 
 								wil::unique_cotaskmem_string uri;
@@ -268,7 +270,7 @@ void WebWindow::AttachWebView()
 											std::wstring contentTypeWS = contentType;
 
 											IStream* dataStream = SHCreateMemStream((BYTE*)dotNetResponse.get(), numBytes);
-											wil::com_ptr<IWebView2WebResourceResponse> response;
+											wil::com_ptr<ICoreWebView2WebResourceResponse> response;
 											_webviewEnvironment->CreateWebResourceResponse(
 												dataStream, 200, L"OK", (L"Content-Type: " + contentTypeWS).c_str(),
 												&response);
