@@ -23,7 +23,7 @@ namespace WebWindows.Blazor
         internal static DesktopRenderer DesktopRenderer { get; private set; }
         internal static WebWindow WebWindow { get; private set; }
 
-        public static void Run<TStartup>(string windowTitle, string hostHtmlPath)
+        public static void Run<TStartup>(string windowTitle, string hostHtmlPath, bool fullscreen = false, int x = 0, int y = 0, int width = 800, int height = 600)
         {
             DesktopSynchronizationContext.UnhandledException += (sender, exception) =>
             {
@@ -54,7 +54,7 @@ namespace WebWindows.Blazor
                     contentType = GetContentType(url);
                     return SupplyFrameworkFile(url);
                 });
-            });
+            }, fullscreen, x, y, width, height);
 
             CancellationTokenSource appLifetimeCts = new CancellationTokenSource();
             Task.Factory.StartNew(async () =>

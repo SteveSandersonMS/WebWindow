@@ -46,19 +46,28 @@ void WebWindow::Register(HINSTANCE hInstance)
 	SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE);
 }
 
-WebWindow::WebWindow(AutoString title, WebWindow* parent, WebMessageReceivedCallback webMessageReceivedCallback)
+WebWindow::WebWindow(AutoString title, WebWindow* parent, WebMessageReceivedCallback webMessageReceivedCallback, bool fullscreen, int x = CW_USEDEFAULT, int y = CW_USEDEFAULT, int width = CW_USEDEFAULT, int height = CW_USEDEFAULT)
 {
 	// Create the window
 	_webMessageReceivedCallback = webMessageReceivedCallback;
 	_parent = parent;
+
+	if (fullscreen)
+	{
+		x = 0;
+		y = 0;
+		width = GetSystemMetrics(SM_CXSCREEN);
+		height = GetSystemMetrics(SM_CYSCREEN);
+	}
+
 	_hWnd = CreateWindowEx(
 		0,                              // Optional window styles.
 		CLASS_NAME,                     // Window class
 		title,							// Window text
-		WS_OVERLAPPEDWINDOW,            // Window style
+		fullscreen ? WS_POPUP : WS_OVERLAPPEDWINDOW,	// Window style
 
 		// Size and position
-		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+		x, y, width, height,
 
 		parent ? parent->_hWnd : NULL,       // Parent window
 		NULL,       // Menu

@@ -27,7 +27,7 @@ struct InvokeJSWaitInfo
 void on_size_allocate(GtkWidget* widget, GdkRectangle* allocation, gpointer self);
 gboolean on_configure_event(GtkWidget* widget, GdkEvent* event, gpointer self);
 
-WebWindow::WebWindow(AutoString title, WebWindow* parent, WebMessageReceivedCallback webMessageReceivedCallback) : _webview(nullptr)
+WebWindow::WebWindow(AutoString title, WebWindow* parent, WebMessageReceivedCallback webMessageReceivedCallback, bool fullscreen, int x, int y, int width, int height) : _webview(nullptr)
 {
 	_webMessageReceivedCallback = webMessageReceivedCallback;
 
@@ -37,7 +37,22 @@ WebWindow::WebWindow(AutoString title, WebWindow* parent, WebMessageReceivedCall
 
 	gtk_init(0, NULL);
 	_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-	gtk_window_set_default_size(GTK_WINDOW(_window), 900, 600);
+
+	if (fullscreen)
+	{
+		GdkRectangle geometry = { 0 };
+		gdk_monitor_get_geometry(gdk_display_get_primary_monitor(gdk_display_get_default()), &geometry);
+
+		x = 0;
+		y = 0;
+		width = geometry.width;
+		height = geometry.height;
+
+		gtk_window_fullscreen(GTK_WINDOW(_window));
+	}
+
+	gtk_window_move(GTK_WINDOW(_window), x, y);
+	gtk_window_set_default_size(GTK_WINDOW(_window), width, height);
 	SetTitle(title);
 
 	if (parent == NULL)

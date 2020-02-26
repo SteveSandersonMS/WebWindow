@@ -59,7 +59,7 @@ namespace WebWindows
         const string DllName = "WebWindow.Native";
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern IntPtr WebWindow_register_win32(IntPtr hInstance);
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern IntPtr WebWindow_register_mac();
-        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Auto)] static extern IntPtr WebWindow_ctor(string title, IntPtr parentWebWindow, OnWebMessageReceivedCallback webMessageReceivedCallback);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Auto)] static extern IntPtr WebWindow_ctor(string title, IntPtr parentWebWindow, OnWebMessageReceivedCallback webMessageReceivedCallback, bool fullscreen, int x, int y, int width, int height);
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_dtor(IntPtr instance);
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern IntPtr WebWindow_getHwnd_win32(IntPtr instance);
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Auto)] static extern void WebWindow_SetTitle(IntPtr instance, string title);
@@ -112,7 +112,7 @@ namespace WebWindows
         {
         }
 
-        public WebWindow(string title, Action<WebWindowOptions> configure)
+        public WebWindow(string title, Action<WebWindowOptions> configure, bool fullscreen = false, int x = 0, int y = 0, int width = 800, int height = 600)
         {
             _ownerThreadId = Thread.CurrentThread.ManagedThreadId;
 
@@ -130,7 +130,7 @@ namespace WebWindows
             _gcHandlesToFree.Add(GCHandle.Alloc(onWebMessageReceivedDelegate));
 
             var parentPtr = options.Parent?._nativeWebWindow ?? default;
-            _nativeWebWindow = WebWindow_ctor(_title, parentPtr, onWebMessageReceivedDelegate);
+            _nativeWebWindow = WebWindow_ctor(_title, parentPtr, onWebMessageReceivedDelegate, fullscreen, x, y, width, height);
 
             foreach (var (schemeName, handler) in options.SchemeHandlers)
             {
