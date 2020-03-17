@@ -16,6 +16,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <WebpackInputs Remove="src\RenderQueue.ts" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="dist\" />
   </ItemGroup>
 
