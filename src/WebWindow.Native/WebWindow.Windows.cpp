@@ -371,7 +371,7 @@ void WebWindow::GetAllMonitors(GetAllMonitorsCallback callback)
 {
 	if (callback)
 	{
-		EnumDisplayMonitors(NULL, NULL, MonitorEnum, (LPARAM)callback);
+		EnumDisplayMonitors(NULL, NULL, (MONITORENUMPROC)MonitorEnum, (LPARAM)callback);
 	}
 }
 
