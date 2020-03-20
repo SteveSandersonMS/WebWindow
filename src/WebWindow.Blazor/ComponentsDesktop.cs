@@ -25,10 +25,6 @@ namespace WebWindows.Blazor
 
         public static void Run<TStartup>(string windowTitle, string hostHtmlPath)
         {
-            DesktopSynchronizationContext.UnhandledException += (sender, exception) =>
-            {
-                UnhandledException(exception);
-            };
 
             WebWindow = new WebWindow(windowTitle, options =>
             {
@@ -120,9 +116,17 @@ namespace WebWindows.Blazor
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: true);
 
+            var dispatcher = new PlatformDispatcher(appLifetime);
+
+            dispatcher.Context.UnhandledException += (sender, exception) =>
+            {
+                UnhandledException(exception);
+            };
+
             DesktopJSRuntime = new DesktopJSRuntime(ipc);
             await PerformHandshakeAsync(ipc);
-            AttachJsInterop(ipc, appLifetime);
+
+            AttachJsInterop(ipc, dispatcher.Context, appLifetime);
 
             var serviceCollection = new ServiceCollection();
             serviceCollection.AddSingleton<IConfiguration>(configurationBuilder.Build());
@@ -141,7 +145,7 @@ namespace WebWindows.Blazor
 
             var loggerFactory = services.GetRequiredService<ILoggerFactory>();
 
-            DesktopRenderer = new DesktopRenderer(services, ipc, loggerFactory);
+            DesktopRenderer = new DesktopRenderer(services, ipc, loggerFactory, DesktopJSRuntime, dispatcher);
             DesktopRenderer.UnhandledException += (sender, exception) =>
             {
                 Console.Error.WriteLine(exception);
@@ -149,7 +153,7 @@ namespace WebWindows.Blazor
 
             foreach (var rootComponent in builder.Entries)
             {
-                _ = DesktopRenderer.AddComponentAsync(rootComponent.componentType, rootComponent.domElementSelector);
+                await dispatcher.InvokeAsync(async () => await DesktopRenderer.AddComponentAsync(rootComponent.componentType, rootComponent.domElementSelector));
             }
         }
 
@@ -179,14 +183,11 @@ namespace WebWindows.Blazor
             await tcs.Task;
         }
 
-        private static void AttachJsInterop(IPC ipc, CancellationToken appLifetime)
-        {
-            var desktopSynchronizationContext = new DesktopSynchronizationContext(appLifetime);
-            SynchronizationContext.SetSynchronizationContext(desktopSynchronizationContext);
-
+        private static void AttachJsInterop(IPC ipc, SynchronizationContext synchronizationContext, CancellationToken appLifetime)
+        {            
             ipc.On("BeginInvokeDotNetFromJS", args =>
             {
-                desktopSynchronizationContext.Send(state =>
+                synchronizationContext.Send(state =>
                 {
                     var argsArray = (object[])state;
                     DotNetDispatcher.BeginInvokeDotNet(
@@ -202,7 +203,7 @@ namespace WebWindows.Blazor
 
             ipc.On("EndInvokeJSFromDotNet", args =>
             {
-                desktopSynchronizationContext.Send(state =>
+                synchronizationContext.Send(state =>
                 {
                     var argsArray = (object[])state;
                     DotNetDispatcher.EndInvokeJS(

@@ -30,7 +30,7 @@ namespace WebWindows.Blazor
         private bool _disposing = false;
         private long _nextRenderId = 1;
 
-        public override Dispatcher Dispatcher { get; } = NullDispatcher.Instance;
+        public override Dispatcher Dispatcher { get; }
 
         static DesktopRenderer()
         {
@@ -38,11 +38,12 @@ namespace WebWindows.Blazor
             _writeMethod = _writer.GetMethod("Write", new[] { typeof(RenderBatch).MakeByRefType() });
         }
 
-        public DesktopRenderer(IServiceProvider serviceProvider, IPC ipc, ILoggerFactory loggerFactory)
+        public DesktopRenderer(IServiceProvider serviceProvider, IPC ipc, ILoggerFactory loggerFactory, IJSRuntime jSRuntime, Dispatcher dispatcher)
             : base(serviceProvider, loggerFactory)
         {
             _ipc = ipc ?? throw new ArgumentNullException(nameof(ipc));
-            _jsRuntime = serviceProvider.GetRequiredService<IJSRuntime>();
+            Dispatcher = dispatcher;
+            _jsRuntime = jSRuntime;
         }
 
         /// <summary>
