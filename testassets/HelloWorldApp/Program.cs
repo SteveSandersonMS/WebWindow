@@ -24,8 +24,8 @@ namespace HelloWorldApp
                 window.SendMessage("Got message: " + message);
             };
 
-            window.NavigateToLocalFile("wwwroot/index.html");
-            //window.NavigateToUrl("https://bing.com");
+            //window.NavigateToLocalFile("wwwroot/index.html");
+            window.NavigateToUrl("https://bing.com");
             window.WaitForExit();
         }
     }
