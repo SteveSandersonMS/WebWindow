@@ -146,7 +146,7 @@ void WebWindow::RefitContent()
 	{
 		RECT bounds;
 		GetClientRect(_hWnd, &bounds);
-		_webviewWindow->put_Bounds(bounds);
+		_webviewHost->put_Bounds(bounds);
 	}
 }
 
@@ -219,7 +219,9 @@ void WebWindow::AttachWebView()
 				env->CreateCoreWebView2Host(_hWnd, Callback<ICoreWebView2CreateCoreWebView2HostCompletedHandler>(
 					[&, this](HRESULT result, ICoreWebView2Host* webview) -> HRESULT {
 						if (result != S_OK) { return result; }
-						result = webview->QueryInterface(&_webviewWindow);
+						result = webview->QueryInterface(&_webviewHost);
+						if (result != S_OK) { return result; }
+						result = webview->get_CoreWebView2(&_webviewWindow);
 						if (result != S_OK) { return result; }
 
 						// Add a few settings for the webview
@@ -351,7 +353,7 @@ void WebWindow::SetSize(int width, int height)
 	SetWindowPos(_hWnd, HWND_TOP, 0, 0, width, height, SWP_NOMOVE | SWP_NOZORDER);
 }
 
-BOOL MonitorEnum(HMONITOR monitor, HDC, LPRECT, LPARAM arg)
+BOOL __stdcall MonitorEnum(HMONITOR monitor, HDC, LPRECT, LPARAM arg)
 {
 	auto callback = (GetAllMonitorsCallback)arg;
 	MONITORINFO info = {};
@@ -372,7 +374,7 @@ BOOL MonitorEnum(HMONITOR monitor, HDC, LPRECT, LPARAM arg)
 void WebWindow::GetAllMonitors(GetAllMonitorsCallback callback)
 {
 	if (callback)
-	{
+	{	
 		EnumDisplayMonitors(NULL, NULL, MonitorEnum, (LPARAM)callback);
 	}
 }
