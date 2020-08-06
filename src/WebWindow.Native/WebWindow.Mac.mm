@@ -134,15 +134,29 @@ void WebWindow::Invoke(ACTION callback)
         callback();
     });
 }
+void EnsureInvoke(dispatch_block_t block)
+{
+    if ([NSThread isMainThread])
+    {
+        block();
+    }
+    else
+    {
+        dispatch_async(dispatch_get_main_queue(), block);
+    }
+}
 
 void WebWindow::ShowMessage(AutoString title, AutoString body, unsigned int type)
 {
-    NSString* nstitle = [[NSString stringWithUTF8String:title] autorelease];
-    NSString* nsbody= [[NSString stringWithUTF8String:body] autorelease];
-    NSAlert *alert = [[[NSAlert alloc] init] autorelease];
-    [[alert window] setTitle:nstitle];
-    [alert setMessageText:nsbody];
-    [alert runModal];
+
+    EnsureInvoke(^{
+        NSString* nstitle = [[NSString stringWithUTF8String:title] autorelease];
+        NSString* nsbody= [[NSString stringWithUTF8String:body] autorelease];
+        NSAlert *alert = [[[NSAlert alloc] init] autorelease];
+        [[alert window] setTitle:nstitle];
+        [alert setMessageText:nsbody];
+        [alert runModal];
+    });
 }
 
 void WebWindow::NavigateToString(AutoString content)
