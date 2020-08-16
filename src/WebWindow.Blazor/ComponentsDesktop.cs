@@ -21,7 +21,7 @@ namespace WebWindows.Blazor
         internal static string BaseUriAbsolute { get; private set; }
         internal static DesktopJSRuntime DesktopJSRuntime { get; private set; }
         internal static DesktopRenderer DesktopRenderer { get; private set; }
-        internal static WebWindow WebWindow { get; private set; }
+        public static WebWindow WebWindow { get; private set; }
 
         public static void Run<TStartup>(string windowTitle, string hostHtmlPath)
         {
