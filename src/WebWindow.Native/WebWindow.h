@@ -3,7 +3,8 @@
 
 #ifdef _WIN32
 #include <Windows.h>
-#include <wrl/event.h>
+#include <stdlib.h>
+#include <wrl.h>
 #include <map>
 #include <string>
 #include <wil/com.h>
@@ -42,8 +43,9 @@ private:
 	static HINSTANCE _hInstance;
 	HWND _hWnd;
 	WebWindow* _parent;
-	wil::com_ptr<IWebView2Environment3> _webviewEnvironment;
-	wil::com_ptr<IWebView2WebView5> _webviewWindow;
+	wil::com_ptr<ICoreWebView2Environment> _webviewEnvironment;
+	wil::com_ptr<ICoreWebView2> _webviewWindow;
+	wil::com_ptr<ICoreWebView2Controller> _webviewController;
 	std::map<std::wstring, WebResourceRequestedCallback> _schemeToRequestHandler;
 	void AttachWebView();
 #elif OS_LINUX
