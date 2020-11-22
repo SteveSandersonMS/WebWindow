@@ -59,6 +59,22 @@
     }];
 }
 
+- (void)webView:(WKWebView *)webView runOpenPanelWithParameters:(WKOpenPanelParameters *)parameters initiatedByFrame:(WKFrameInfo *)frame completionHandler:(void (^)(NSArray<NSURL *> *URLs))completionHandler 
+{
+    NSOpenPanel * openDialog = [[NSOpenPanel alloc] init];
+    openDialog.canChooseFiles = YES;
+    openDialog.canChooseDirectories = parameters.allowsDirectories;
+    openDialog.allowsMultipleSelection = parameters.allowsMultipleSelection;
+
+    [openDialog beginSheetModalForWindow:window completionHandler:^(NSModalResponse result) {
+        if (result == NSModalResponseOK) {
+            completionHandler([openDialog URLs]);
+        } else {
+            completionHandler(nil);
+        }
+    }];
+}
+
 - (void)windowDidResize:(NSNotification *)notification {
     int width, height;
     webWindow->GetSize(&width, &height);
