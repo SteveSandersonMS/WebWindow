@@ -17,7 +17,7 @@ LPCWSTR CLASS_NAME = L"WebWindow";
 std::mutex invokeLockMutex;
 HINSTANCE WebWindow::_hInstance;
 HWND messageLoopRootWindowHandle;
-std::map<HWND, WebWindow*> hwndToWebWindow;
+std::map<HWND, WebWindow *> hwndToWebWindow;
 
 struct InvokeWaitInfo
 {
@@ -36,8 +36,8 @@ void WebWindow::Register(HINSTANCE hInstance)
 {
 	_hInstance = hInstance;
 
-	// Register the window class	
-	WNDCLASSW wc = { };
+	// Register the window class
+	WNDCLASSW wc = {};
 	wc.lpfnWndProc = WindowProc;
 	wc.hInstance = hInstance;
 	wc.lpszClassName = CLASS_NAME;
@@ -46,24 +46,24 @@ void WebWindow::Register(HINSTANCE hInstance)
 	SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE);
 }
 
-WebWindow::WebWindow(AutoString title, WebWindow* parent, WebMessageReceivedCallback webMessageReceivedCallback)
+WebWindow::WebWindow(AutoString title, WebWindow *parent, WebMessageReceivedCallback webMessageReceivedCallback)
 {
 	// Create the window
 	_webMessageReceivedCallback = webMessageReceivedCallback;
 	_parent = parent;
 	_hWnd = CreateWindowEx(
-		0,                              // Optional window styles.
-		CLASS_NAME,                     // Window class
-		title,							// Window text
-		WS_OVERLAPPEDWINDOW,            // Window style
+		0,					 // Optional window styles.
+		CLASS_NAME,			 // Window class
+		title,				 // Window text
+		WS_OVERLAPPEDWINDOW, // Window style
 
 		// Size and position
 		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
 
-		parent ? parent->_hWnd : NULL,       // Parent window
-		NULL,       // Menu
-		_hInstance, // Instance handle
-		this        // Additional application data
+		parent ? parent->_hWnd : NULL, // Parent window
+		NULL,						   // Menu
+		_hInstance,					   // Instance handle
+		this						   // Additional application data
 	);
 	hwndToWebWindow[_hWnd] = this;
 }
@@ -93,7 +93,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	}
 	case WM_USER_SHOWMESSAGE:
 	{
-		ShowMessageParams* params = (ShowMessageParams*)wParam;
+		ShowMessageParams *params = (ShowMessageParams *)wParam;
 		MessageBox(hwnd, params->body.c_str(), params->title.c_str(), params->type);
 		delete params;
 		return 0;
@@ -103,7 +103,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		ACTION callback = (ACTION)wParam;
 		callback();
-		InvokeWaitInfo* waitInfo = (InvokeWaitInfo*)lParam;
+		InvokeWaitInfo *waitInfo = (InvokeWaitInfo *)lParam;
 		{
 			std::lock_guard<std::mutex> guard(invokeLockMutex);
 			waitInfo->isCompleted = true;
@@ -113,7 +113,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	}
 	case WM_SIZE:
 	{
-		WebWindow* webWindow = hwndToWebWindow[hwnd];
+		WebWindow *webWindow = hwndToWebWindow[hwnd];
 		if (webWindow)
 		{
 			webWindow->RefitContent();
@@ -125,7 +125,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	}
 	case WM_MOVE:
 	{
-		WebWindow* webWindow = hwndToWebWindow[hwnd];
+		WebWindow *webWindow = hwndToWebWindow[hwnd];
 		if (webWindow)
 		{
 			int x, y;
@@ -173,7 +173,7 @@ void WebWindow::WaitForExit()
 	messageLoopRootWindowHandle = _hWnd;
 
 	// Run the message loop
-	MSG msg = { };
+	MSG msg = {};
 	while (GetMessage(&msg, NULL, 0, 0))
 	{
 		TranslateMessage(&msg);
@@ -183,7 +183,7 @@ void WebWindow::WaitForExit()
 
 void WebWindow::ShowMessage(AutoString title, AutoString body, UINT type)
 {
-	ShowMessageParams* params = new ShowMessageParams;
+	ShowMessageParams *params = new ShowMessageParams;
 	params->title = title;
 	params->body = body;
 	params->type = type;
@@ -207,87 +207,97 @@ void WebWindow::AttachWebView()
 	flag.test_and_set();
 
 	HRESULT envResult = CreateWebView2EnvironmentWithDetails(nullptr, nullptr, nullptr,
-		Callback<IWebView2CreateWebView2EnvironmentCompletedHandler>(
-			[&, this](HRESULT result, IWebView2Environment* env) -> HRESULT {
-				HRESULT envResult = env->QueryInterface(&_webviewEnvironment);
-				if (envResult != S_OK)
-				{
-					return envResult;
-				}
+															 Callback<IWebView2CreateWebView2EnvironmentCompletedHandler>(
+																 [&, this](HRESULT result, IWebView2Environment *env) -> HRESULT {
+																	 HRESULT envResult = env->QueryInterface(&_webviewEnvironment);
+																	 if (envResult != S_OK)
+																	 {
+																		 return envResult;
+																	 }
 
-				// Create a WebView, whose parent is the main window hWnd
-				env->CreateWebView(_hWnd, Callback<IWebView2CreateWebViewCompletedHandler>(
-					[&, this](HRESULT result, IWebView2WebView* webview) -> HRESULT {
-						if (result != S_OK) { return result; }
-						result = webview->QueryInterface(&_webviewWindow);
-						if (result != S_OK) { return result; }
+																	 // Create a WebView, whose parent is the main window hWnd
+																	 env->CreateWebView(_hWnd, Callback<IWebView2CreateWebViewCompletedHandler>(
+																								   [&, this](HRESULT result, IWebView2WebView *webview) -> HRESULT {
+																									   if (result != S_OK)
+																									   {
+																										   return result;
+																									   }
+																									   result = webview->QueryInterface(&_webviewWindow);
+																									   if (result != S_OK)
+																									   {
+																										   return result;
+																									   }
 
-						// Add a few settings for the webview
-						// this is a redundant demo step as they are the default settings values
-						IWebView2Settings* Settings;
-						_webviewWindow->get_Settings(&Settings);
-						Settings->put_IsScriptEnabled(TRUE);
-						Settings->put_AreDefaultScriptDialogsEnabled(TRUE);
-						Settings->put_IsWebMessageEnabled(TRUE);
+																									   // Add a few settings for the webview
+																									   // this is a redundant demo step as they are the default settings values
+																									   IWebView2Settings *Settings;
+																									   _webviewWindow->get_Settings(&Settings);
+																									   Settings->put_IsScriptEnabled(TRUE);
+																									   Settings->put_AreDefaultScriptDialogsEnabled(TRUE);
+																									   Settings->put_IsWebMessageEnabled(TRUE);
 
-						// Register interop APIs
-						EventRegistrationToken webMessageToken;
-						_webviewWindow->AddScriptToExecuteOnDocumentCreated(L"window.external = { sendMessage: function(message) { window.chrome.webview.postMessage(message); }, receiveMessage: function(callback) { window.chrome.webview.addEventListener(\'message\', function(e) { callback(e.data); }); } };", nullptr);
-						_webviewWindow->add_WebMessageReceived(Callback<IWebView2WebMessageReceivedEventHandler>(
-							[this](IWebView2WebView* webview, IWebView2WebMessageReceivedEventArgs* args) -> HRESULT {
-								wil::unique_cotaskmem_string message;
-								args->get_WebMessageAsString(&message);
-								_webMessageReceivedCallback(message.get());
-								return S_OK;
-							}).Get(), &webMessageToken);
+																									   // Register interop APIs
+																									   EventRegistrationToken webMessageToken;
+																									   _webviewWindow->AddScriptToExecuteOnDocumentCreated(L"window.external = { sendMessage: function(message) { window.chrome.webview.postMessage(message); }, receiveMessage: function(callback) { window.chrome.webview.addEventListener(\'message\', function(e) { callback(e.data); }); } };", nullptr);
+																									   _webviewWindow->add_WebMessageReceived(Callback<IWebView2WebMessageReceivedEventHandler>(
+																																				  [this](IWebView2WebView *webview, IWebView2WebMessageReceivedEventArgs *args) -> HRESULT {
+																																					  wil::unique_cotaskmem_string message;
+																																					  args->get_WebMessageAsString(&message);
+																																					  _webMessageReceivedCallback(message.get());
+																																					  return S_OK;
+																																				  })
+																																				  .Get(),
+																																			  &webMessageToken);
 
-						EventRegistrationToken webResourceRequestedToken;
-						_webviewWindow->AddWebResourceRequestedFilter(L"*", WEBVIEW2_WEB_RESOURCE_CONTEXT_ALL);
-						_webviewWindow->add_WebResourceRequested(Callback<IWebView2WebResourceRequestedEventHandler>(
-							[this](IWebView2WebView* sender, IWebView2WebResourceRequestedEventArgs* args)
-							{
-								IWebView2WebResourceRequest* req;
-								args->get_Request(&req);
+																									   EventRegistrationToken webResourceRequestedToken;
+																									   _webviewWindow->AddWebResourceRequestedFilter(L"*", WEBVIEW2_WEB_RESOURCE_CONTEXT_ALL);
+																									   _webviewWindow->add_WebResourceRequested(Callback<IWebView2WebResourceRequestedEventHandler>(
+																																					[this](IWebView2WebView *sender, IWebView2WebResourceRequestedEventArgs *args) {
+																																						IWebView2WebResourceRequest *req;
+																																						args->get_Request(&req);
 
-								wil::unique_cotaskmem_string uri;
-								req->get_Uri(&uri);
-								std::wstring uriString = uri.get();
-								size_t colonPos = uriString.find(L':', 0);
-								if (colonPos > 0)
-								{
-									std::wstring scheme = uriString.substr(0, colonPos);
-									WebResourceRequestedCallback handler = _schemeToRequestHandler[scheme];
-									if (handler != NULL)
-									{
-										int numBytes;
-										AutoString contentType;
-										wil::unique_cotaskmem dotNetResponse(handler(uriString.c_str(), &numBytes, &contentType));
+																																						wil::unique_cotaskmem_string uri;
+																																						req->get_Uri(&uri);
+																																						std::wstring uriString = uri.get();
+																																						size_t colonPos = uriString.find(L':', 0);
+																																						if (colonPos > 0)
+																																						{
+																																							std::wstring scheme = uriString.substr(0, colonPos);
+																																							WebResourceRequestedCallback handler = _schemeToRequestHandler[scheme];
+																																							if (handler != NULL)
+																																							{
+																																								int numBytes;
+																																								AutoString contentType;
+																																								wil::unique_cotaskmem dotNetResponse(handler(uriString.c_str(), &numBytes, &contentType));
 
-										if (dotNetResponse != nullptr && contentType != nullptr)
-										{
-											std::wstring contentTypeWS = contentType;
+																																								if (dotNetResponse != nullptr && contentType != nullptr)
+																																								{
+																																									std::wstring contentTypeWS = contentType;
 
-											IStream* dataStream = SHCreateMemStream((BYTE*)dotNetResponse.get(), numBytes);
-											wil::com_ptr<IWebView2WebResourceResponse> response;
-											_webviewEnvironment->CreateWebResourceResponse(
-												dataStream, 200, L"OK", (L"Content-Type: " + contentTypeWS).c_str(),
-												&response);
-											args->put_Response(response.get());
-										}
-									}
-								}
+																																									IStream *dataStream = SHCreateMemStream((BYTE *)dotNetResponse.get(), numBytes);
+																																									wil::com_ptr<IWebView2WebResourceResponse> response;
+																																									_webviewEnvironment->CreateWebResourceResponse(
+																																										dataStream, 200, L"OK", (L"Content-Type: " + contentTypeWS).c_str(),
+																																										&response);
+																																									args->put_Response(response.get());
+																																								}
+																																							}
+																																						}
 
-								return S_OK;
-							}
-						).Get(), &webResourceRequestedToken);
+																																						return S_OK;
+																																					})
+																																					.Get(),
+																																				&webResourceRequestedToken);
 
-						RefitContent();
+																									   RefitContent();
 
-						flag.clear();
-						return S_OK;
-					}).Get());
-				return S_OK;
-			}).Get());
+																									   flag.clear();
+																									   return S_OK;
+																								   })
+																								   .Get());
+																	 return S_OK;
+																 })
+																 .Get());
 
 	if (envResult != S_OK)
 	{
@@ -299,7 +309,7 @@ void WebWindow::AttachWebView()
 	{
 		// Block until it's ready. This simplifies things for the caller, so they
 		// don't need to regard this process as async.
-		MSG msg = { };
+		MSG msg = {};
 		while (flag.test_and_set() && GetMessage(&msg, NULL, 0, 0))
 		{
 			TranslateMessage(&msg);
@@ -331,17 +341,21 @@ void WebWindow::AddCustomScheme(AutoString scheme, WebResourceRequestedCallback 
 void WebWindow::SetResizable(bool resizable)
 {
 	LONG_PTR style = GetWindowLongPtr(_hWnd, GWL_STYLE);
-	if (resizable) style |= WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
-	else style &= (~WS_THICKFRAME) & (~WS_MINIMIZEBOX) & (~WS_MAXIMIZEBOX);
+	if (resizable)
+		style |= WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
+	else
+		style &= (~WS_THICKFRAME) & (~WS_MINIMIZEBOX) & (~WS_MAXIMIZEBOX);
 	SetWindowLongPtr(_hWnd, GWL_STYLE, style);
 }
 
-void WebWindow::GetSize(int* width, int* height)
+void WebWindow::GetSize(int *width, int *height)
 {
 	RECT rect = {};
 	GetWindowRect(_hWnd, &rect);
-	if (width) *width = rect.right - rect.left;
-	if (height) *height = rect.bottom - rect.top;
+	if (width)
+		*width = rect.right - rect.left;
+	if (height)
+		*height = rect.bottom - rect.top;
 }
 
 void WebWindow::SetSize(int width, int height)
@@ -380,12 +394,14 @@ unsigned int WebWindow::GetScreenDpi()
 	return GetDpiForWindow(_hWnd);
 }
 
-void WebWindow::GetPosition(int* x, int* y)
+void WebWindow::GetPosition(int *x, int *y)
 {
 	RECT rect = {};
 	GetWindowRect(_hWnd, &rect);
-	if (x) *x = rect.left;
-	if (y) *y = rect.top;
+	if (x)
+		*x = rect.left;
+	if (y)
+		*y = rect.top;
 }
 
 void WebWindow::SetPosition(int x, int y)
@@ -405,4 +421,9 @@ void WebWindow::SetIconFile(AutoString filename)
 	{
 		::SendMessage(_hWnd, WM_SETICON, ICON_SMALL, (LPARAM)icon);
 	}
+}
+
+void WebWindow::ShowNotification(AutoString title, AutoString message)
+{
+	//TODO: Implement Windows notifications
 }
