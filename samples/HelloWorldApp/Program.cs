@@ -11,7 +11,8 @@ namespace HelloWorldApp
         {
             string folder = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
             var window = new WebWindow("My first WebWindow app");
-            window.NavigateToLocalFile(folder +"/wwwroot/index.html");
+            window.SetIconFile(folder + "/icon.png");
+	    window.NavigateToLocalFile(folder +"/wwwroot/index.html");
             window.ShowNotification("Oh yeeees!", "This is a notification.");
             window.WaitForExit();
         }

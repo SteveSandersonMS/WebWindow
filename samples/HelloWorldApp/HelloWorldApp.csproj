@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
     <UseAppHost>true</UseAppHost>
     <CFBundleName>HelloWorldApp</CFBundleName> <!-- Also defines .app file name -->
     <CFBundleShortVersionString>HelloWorldApp</CFBundleShortVersionString>

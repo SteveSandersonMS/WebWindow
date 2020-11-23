@@ -9,6 +9,7 @@
 #include <JavaScriptCore/JavaScript.h>
 #include <sstream>
 #include <iomanip>
+#include <libnotify/notify.h>
 
 std::mutex invokeLockMutex;
 
@@ -307,6 +308,20 @@ void WebWindow::SetTopmost(bool topmost)
 void WebWindow::SetIconFile(AutoString filename)
 {
 	gtk_window_set_icon_from_file(GTK_WINDOW(_window), filename, NULL);
+}
+
+void WebWindow::ShowNotification(AutoString title, AutoString message)
+{
+	const char* appName = gtk_window_get_title(GTK_WINDOW(_window));
+	GdkPixbuf* appIcon = gtk_window_get_icon(GTK_WINDOW(_window));
+	notify_init(appName);
+	NotifyNotification* notification = notify_notification_new(
+		title,
+		message,
+		nullptr
+	);
+	notify_notification_set_icon_from_pixbuf(notification, appIcon);
+	notify_notification_show(notification, nullptr);	
 }
 
 #endif
