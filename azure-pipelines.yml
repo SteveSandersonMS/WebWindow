@@ -4,112 +4,112 @@
 # https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
 
 trigger:
-- master
+  - master
 
 variables:
   versionprefix: 0.1.0
 
 jobs:
-  - job: 'BuildPackage'
+  - job: "BuildPackage"
     strategy:
       matrix:
         linux:
-          imageName: 'ubuntu-18.04'
-          rid: 'linux-x64'
+          imageName: "ubuntu-18.04"
+          rid: "linux-x64"
         mac:
-          imageName: 'macos-10.14'
-          rid: 'osx-x64'
+          imageName: "macos-10.14"
+          rid: "osx-x64"
         windows:
-          rid: 'windows-x64'
-          imageName: 'windows-2019'
+          rid: "windows-x64"
+          imageName: "windows-2019"
 
     pool:
       vmImage: $(imageName)
 
     variables:
-      buildConfiguration: 'Release'
+      buildConfiguration: "Release"
 
     steps:
-    - task: UseDotNet@2
-      displayName: 'Use .NET Core sdk'
-      inputs:
-        packageType: sdk
-        version: 3.0.100
-        installationPath: $(Agent.ToolsDirectory)/dotnet
-    - task: CmdLine@2
-      displayName: 'Install linux dependencies'
-      condition: eq(variables.rid, 'linux-x64')
-      inputs:
-        script: 'sudo apt-get update && sudo apt-get install libgtk-3-dev libwebkit2gtk-4.0-dev'
-    - task: NuGetCommand@2
-      displayName: 'NuGet package restore for Windows native packages'
-      condition: eq(variables.rid, 'windows-x64')
-      inputs:
-        command: 'restore'
-        restoreSolution: 'WebWindow.Native.sln'
-        feedsToUse: 'select'
-    - task: VSBuild@1
-      displayName: 'Build Windows native assets'
-      condition: eq(variables.rid, 'windows-x64')
-      inputs:
-        solution: 'WebWindow.Native.sln'
-        platform: 'x64'
-        configuration: '$(buildConfiguration)'
-    - task: CmdLine@2
-      displayName: 'Build Linux/macOS native assets'
-      condition: ne(variables.rid, 'windows-x64')
-      inputs:
-        script: 'dotnet build -c $(buildConfiguration) src/WebWindow/WebWindow.csproj /t:BuildNonWindowsNative'
-    - task: CmdLine@2
-      condition: eq(variables.rid, 'windows-x64')
-      displayName: 'Build .js artifact for WebWindow.Blazor.JS'
-      inputs:
-        script: 'dotnet build -c $(buildConfiguration) src/WebWindow.Blazor.JS'
-    - task: CmdLine@2
-      displayName: 'dotnet pack WebWindow'
-      inputs:
-        script: 'dotnet pack -c $(buildConfiguration) src/WebWindow/WebWindow.csproj /p:VersionPrefix=$(versionprefix) /p:VersionSuffix=$(Build.BuildNumber)'
-    - task: CmdLine@2
-      condition: eq(variables.rid, 'windows-x64')
-      displayName: 'dotnet pack WebWindow.Blazor'
-      inputs:
-        script: 'dotnet pack -c $(buildConfiguration) src/WebWindow.Blazor/WebWindow.Blazor.csproj /p:VersionPrefix=$(versionprefix) /p:VersionSuffix=$(Build.BuildNumber)'
-    - task: PublishBuildArtifacts@1
-      inputs:
-        PathtoPublish: 'artifacts'
-        ArtifactName: 'artifacts-$(rid)'
-        publishLocation: 'Container'
-  - job: 'CombinePackages'
-    dependsOn: 'BuildPackage'
+      - task: UseDotNet@2
+        displayName: "Use .NET Core sdk"
+        inputs:
+          packageType: sdk
+          version: 3.0.100
+          installationPath: $(Agent.ToolsDirectory)/dotnet
+      - task: CmdLine@2
+        displayName: "Install linux dependencies"
+        condition: eq(variables.rid, 'linux-x64')
+        inputs:
+          script: "sudo apt-get update && sudo apt-get install libgtk-3-dev libwebkit2gtk-4.0-dev libnotify-dev"
+      - task: NuGetCommand@2
+        displayName: "NuGet package restore for Windows native packages"
+        condition: eq(variables.rid, 'windows-x64')
+        inputs:
+          command: "restore"
+          restoreSolution: "WebWindow.Native.sln"
+          feedsToUse: "select"
+      - task: VSBuild@1
+        displayName: "Build Windows native assets"
+        condition: eq(variables.rid, 'windows-x64')
+        inputs:
+          solution: "WebWindow.Native.sln"
+          platform: "x64"
+          configuration: "$(buildConfiguration)"
+      - task: CmdLine@2
+        displayName: "Build Linux/macOS native assets"
+        condition: ne(variables.rid, 'windows-x64')
+        inputs:
+          script: "dotnet build -c $(buildConfiguration) src/WebWindow/WebWindow.csproj /t:BuildNonWindowsNative"
+      - task: CmdLine@2
+        condition: eq(variables.rid, 'windows-x64')
+        displayName: "Build .js artifact for WebWindow.Blazor.JS"
+        inputs:
+          script: "dotnet build -c $(buildConfiguration) src/WebWindow.Blazor.JS"
+      - task: CmdLine@2
+        displayName: "dotnet pack WebWindow"
+        inputs:
+          script: "dotnet pack -c $(buildConfiguration) src/WebWindow/WebWindow.csproj /p:VersionPrefix=$(versionprefix) /p:VersionSuffix=$(Build.BuildNumber)"
+      - task: CmdLine@2
+        condition: eq(variables.rid, 'windows-x64')
+        displayName: "dotnet pack WebWindow.Blazor"
+        inputs:
+          script: "dotnet pack -c $(buildConfiguration) src/WebWindow.Blazor/WebWindow.Blazor.csproj /p:VersionPrefix=$(versionprefix) /p:VersionSuffix=$(Build.BuildNumber)"
+      - task: PublishBuildArtifacts@1
+        inputs:
+          PathtoPublish: "artifacts"
+          ArtifactName: "artifacts-$(rid)"
+          publishLocation: "Container"
+  - job: "CombinePackages"
+    dependsOn: "BuildPackage"
     steps:
-    - task: DownloadBuildArtifacts@0
-      inputs:
-        downloadPath: 'artifacts'
-        artifactName: 'artifacts-windows-x64'
-    - task: DownloadBuildArtifacts@0
-      inputs:
-        downloadPath: 'artifacts'
-        artifactName: 'artifacts-linux-x64'
-    - task: DownloadBuildArtifacts@0
-      inputs:
-        downloadPath: 'artifacts'
-        artifactName: 'artifacts-osx-x64'
-    - task: CmdLine@2
-      inputs:
-        script: 'ls -R artifacts'
-    - task: CmdLine@2
-      displayName: 'Merge .nupkg files'
-      inputs:
-        script: 'sudo apt install zipmerge && mkdir combined && zipmerge combined/WebWindow.$(versionprefix)-$(Build.BuildNumber).nupkg artifacts/*/WebWindow.$(versionprefix)-$(Build.BuildNumber).nupkg'
-    - task: CmdLine@2
-      displayName: 'Copy WebWindow.Blazor nupkg to output'
-      inputs:
-        script: 'cp artifacts/artifacts-windows-x64/WebWindow.Blazor.*.nupkg combined/'
-    - task: PublishBuildArtifacts@1
-      inputs:
-        PathtoPublish: 'combined'
-        ArtifactName: 'artifacts-combined'
-        publishLocation: 'Container'
+      - task: DownloadBuildArtifacts@0
+        inputs:
+          downloadPath: "artifacts"
+          artifactName: "artifacts-windows-x64"
+      - task: DownloadBuildArtifacts@0
+        inputs:
+          downloadPath: "artifacts"
+          artifactName: "artifacts-linux-x64"
+      - task: DownloadBuildArtifacts@0
+        inputs:
+          downloadPath: "artifacts"
+          artifactName: "artifacts-osx-x64"
+      - task: CmdLine@2
+        inputs:
+          script: "ls -R artifacts"
+      - task: CmdLine@2
+        displayName: "Merge .nupkg files"
+        inputs:
+          script: "sudo apt install zipmerge && mkdir combined && zipmerge combined/WebWindow.$(versionprefix)-$(Build.BuildNumber).nupkg artifacts/*/WebWindow.$(versionprefix)-$(Build.BuildNumber).nupkg"
+      - task: CmdLine@2
+        displayName: "Copy WebWindow.Blazor nupkg to output"
+        inputs:
+          script: "cp artifacts/artifacts-windows-x64/WebWindow.Blazor.*.nupkg combined/"
+      - task: PublishBuildArtifacts@1
+        inputs:
+          PathtoPublish: "combined"
+          ArtifactName: "artifacts-combined"
+          publishLocation: "Container"
 
   # Uploads the NuGet package file to nuget.org
   # Important notes:
@@ -118,18 +118,18 @@ jobs:
   # 2. For security, you *must* ensure that 'Make secrets available to builds of forks'
   #    is disabled in your PR validation settings (inside build -> Edit -> Triggers).
   #    Otherwise, PRs would be able to push new packages even without being merged.
-  - job: 'PublishToNuGet'
-    dependsOn: 'CombinePackages'
+  - job: "PublishToNuGet"
+    dependsOn: "CombinePackages"
     steps:
-    - task: DownloadBuildArtifacts@0
-      inputs:
-        downloadPath: 'artifacts'
-        artifactName: 'artifacts-combined'
-    - task: NuGetCommand@2
-      displayName: 'Publish to nuget.org'
-      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
-      inputs:
-        command: push
-        packagesToPush: 'artifacts/artifacts-combined/*.nupkg'
-        nuGetFeedType: external
-        publishFeedCredentials: 'WebWindowNuGet'
+      - task: DownloadBuildArtifacts@0
+        inputs:
+          downloadPath: "artifacts"
+          artifactName: "artifacts-combined"
+      - task: NuGetCommand@2
+        displayName: "Publish to nuget.org"
+        condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+        inputs:
+          command: push
+          packagesToPush: "artifacts/artifacts-combined/*.nupkg"
+          nuGetFeedType: external
+          publishFeedCredentials: "WebWindowNuGet"
