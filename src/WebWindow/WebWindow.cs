@@ -82,6 +82,7 @@ namespace WebWindows
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_SetMovedCallback(IntPtr instance, MovedCallback callback);
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] static extern void WebWindow_SetTopmost(IntPtr instance, int topmost);
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Auto)] static extern void WebWindow_SetIconFile(IntPtr instance, string filename);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Auto)] static extern void WebWindow_ShowNotification(IntPtr instance, string title, string message);
 
         private readonly List<GCHandle> _gcHandlesToFree = new List<GCHandle>();
         private readonly List<IntPtr> _hGlobalToFree = new List<IntPtr>();
@@ -470,5 +471,14 @@ namespace WebWindows
         }
 
         public void SetIconFile(string filename) => WebWindow_SetIconFile(_nativeWebWindow, Path.GetFullPath(filename));
+
+        /**
+        *   This is an experimental feature.
+        *       - On macOs you need to bundle you executable into a .app, you
+                also need to codesign your .app, otherwise notifications won't work.
+        */
+        public void ShowNotification(string title, string message) {
+            WebWindow_ShowNotification(_nativeWebWindow, title, message);
+        }
     }
 }

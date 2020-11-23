@@ -7,6 +7,7 @@
 #include <map>
 #import <Cocoa/Cocoa.h>
 #import <WebKit/WebKit.h>
+#import <UserNotifications/UserNotifications.h>
 
 using namespace std;
 
@@ -27,7 +28,7 @@ void WebWindow::Register()
     id quitMenuItem = [[[NSMenuItem alloc] initWithTitle:quitTitle
         action:@selector(terminate:) keyEquivalent:@"q"] autorelease];
     [appMenu addItem:quitMenuItem];
-    [appMenuItem setSubmenu:appMenu];
+    [appMenuItem setSubmenu:appMenu]; 
 
     MyApplicationDelegate * appDelegate = [[[MyApplicationDelegate alloc] init] autorelease];
     NSApplication * application = [NSApplication sharedApplication];
@@ -290,6 +291,18 @@ void WebWindow::SetIconFile(AutoString filename)
         NSWindow* window = (NSWindow*)_window;
         [[window standardWindowButton:NSWindowDocumentIconButton] setImage:icon];
     }
+}   
+
+void WebWindow::ShowNotification(AutoString title, AutoString message)
+{
+    UNMutableNotificationContent *objNotificationContent = [[UNMutableNotificationContent alloc] init];
+    objNotificationContent.title = [[NSString stringWithUTF8String:title] autorelease];
+    objNotificationContent.body = [[NSString stringWithUTF8String:message] autorelease];
+    objNotificationContent.sound = [UNNotificationSound defaultSound];
+    UNTimeIntervalNotificationTrigger *trigger = [UNTimeIntervalNotificationTrigger triggerWithTimeInterval:0.3 repeats:NO];
+    UNNotificationRequest *request = [UNNotificationRequest requestWithIdentifier:@"three" content:objNotificationContent trigger:trigger];
+    UNUserNotificationCenter *center = [UNUserNotificationCenter currentNotificationCenter];
+    [center addNotificationRequest:request withCompletionHandler:^(NSError * _Nullable error) {}];
 }
 
 #endif

@@ -2,17 +2,32 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <UseAppHost>true</UseAppHost>
+    <CFBundleName>HelloWorldApp</CFBundleName> <!-- Also defines .app file name -->
+    <CFBundleShortVersionString>HelloWorldApp</CFBundleShortVersionString>
+    <CFBundleDisplayName>HelloWorldApp</CFBundleDisplayName>
+    <CFBundleIdentifier>com.example</CFBundleIdentifier>
+    <CFBundleVersion>1.0.0</CFBundleVersion>
+    <CFBundlePackageType>AAPL</CFBundlePackageType>
+    <CFBundleSignature>com.example</CFBundleSignature>
+    <CFBundleExecutable>HelloWorldApp</CFBundleExecutable>
+    <NSPrincipalClass>NSApplication</NSPrincipalClass>
+    <NSHighResolutionCapable>true</NSHighResolutionCapable>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="WebWindow" Version="$(SamplesWebWindowPackageVersion)" />
+    <ProjectReference Include="../../src/WebWindow/WebWindow.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <None Update="wwwroot\**">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Dotnet.Bundle" Version="0.9.13" />
   </ItemGroup>
 
 </Project>

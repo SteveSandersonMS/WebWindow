@@ -1,14 +1,18 @@
 ﻿using System;
+using System.IO;
+using System.Diagnostics;
 using WebWindows;
-
+using System.Threading.Tasks; 
 namespace HelloWorldApp
 {
     class Program
     {
         static void Main(string[] args)
         {
+            string folder = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
             var window = new WebWindow("My first WebWindow app");
-            window.NavigateToLocalFile("wwwroot/index.html");
+            window.NavigateToLocalFile(folder +"/wwwroot/index.html");
+            window.ShowNotification("Oh yeeees!", "This is a notification.");
             window.WaitForExit();
         }
     }
