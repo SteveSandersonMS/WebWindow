@@ -1,4 +1,4 @@
-#ifndef WE;H
+#ifndef WEBWINDOW_H
 #define WEBWINDOW_H
 
 #ifdef _WIN32
