@@ -26,7 +26,7 @@ If you want to build the `WebWindow` library itself, you will need:
    * From the repo root, run `dotnet build src/WebWindow/WebWindow.csproj`
    * Then you can `cd testassets/HelloWorldApp` and `dotnet run`
  * If you're on Linux (tested with Ubuntu 18.04):
-   * Install dependencies: `sudo apt-get update && sudo apt-get install libgtk-3-dev libwebkit2gtk-4.0-dev`
+   * Install dependencies: `sudo apt-get update && sudo apt-get install libgtk-3-dev libwebkit2gtk-4.0-dev libnotify-dev`
    * From the repo root, run `dotnet build src/WebWindow/WebWindow.csproj`
    * Then you can `cd testassets/HelloWorldApp` and `dotnet run`
  * If you're on Windows Subsystem for Linux (WSL), then as well as the above, you will need a local X server ([example setup](https://virtualizationreview.com/articles/2017/02/08/graphical-programs-on-windows-subsystem-on-linux.aspx)).
