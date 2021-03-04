@@ -1,3 +1,12 @@
+# Important
+
+**I'm not directly maintaining or developing WebWindow currently or for the forseeable future.** The primary reason is that it's mostly fulfilled its purpose, which is to inspire and kickstart serious efforts to make cross-platform hybrid desktop+web apps with .NET Core a reality. Read more at https://github.com/SteveSandersonMS/WebWindow/issues/86.
+
+People who want to build real cross-platform hybrid desktop+web apps with .NET Core should consider the following alternatives:
+
+ * [Photino](https://www.tryphotino.io/), which is based on this WebWindow project and is the successor to it. Photino is maintained by the team at CODE Magazine and the project's open source community. It supports Windows, Mac, and Linux, along with UIs built using either Blazor (for .NET Core) or any JavaScript-based framework.
+ * Official support for [Blazor hybrid desktop apps coming in .NET 6](https://devblogs.microsoft.com/dotnet/announcing-net-6-preview-1/#blazor-desktop-apps).
+
 # WebWindow
 
 For information, see [this blog post](https://blog.stevensanderson.com/2019/11/18/2019-11-18-webwindow-a-cross-platform-webview-for-dotnet-core/).
