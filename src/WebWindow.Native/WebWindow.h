@@ -7,7 +7,7 @@
 #include <map>
 #include <string>
 #include <wil/com.h>
-#include <WebView2.h>
+#include "WebView2.h"
 typedef const wchar_t* AutoString;
 #else
 #ifdef OS_LINUX
@@ -42,8 +42,9 @@ private:
 	static HINSTANCE _hInstance;
 	HWND _hWnd;
 	WebWindow* _parent;
-	wil::com_ptr<IWebView2Environment3> _webviewEnvironment;
-	wil::com_ptr<IWebView2WebView5> _webviewWindow;
+	wil::com_ptr<ICoreWebView2Environment> _webviewEnvironment;
+	wil::com_ptr<ICoreWebView2> _webviewWindow;
+	wil::com_ptr<ICoreWebView2Host> _webviewHost;
 	std::map<std::wstring, WebResourceRequestedCallback> _schemeToRequestHandler;
 	void AttachWebView();
 #elif OS_LINUX
