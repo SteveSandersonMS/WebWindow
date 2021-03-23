@@ -2,7 +2,7 @@
 <Project>
   <PropertyGroup>
     <SamplesWebWindowPackageVersion>0.1.0-20200214.9</SamplesWebWindowPackageVersion>
-    <BlazorPackageVersion>3.2.0-preview1.20073.1</BlazorPackageVersion>
+    <BlazorPackageVersion>3.2.0</BlazorPackageVersion>
     <PackageOutputPath>$(MSBuildThisFileDirectory)artifacts</PackageOutputPath>
     <VersionPrefix>0.1.0</VersionPrefix>
     <VersionSuffix>dev</VersionSuffix>

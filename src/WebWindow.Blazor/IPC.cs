@@ -73,7 +73,7 @@ namespace WebWindows.Blazor
 
         private void HandleScriptNotify(object sender, string message)
         {
-            var value = message;
+            var value = message[0] == '"' ? JsonSerializer.Deserialize<string>(message) : message;
 
             // Move off the browser UI thread
             Task.Factory.StartNew(() =>
