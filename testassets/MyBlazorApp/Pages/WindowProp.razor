@@ -55,8 +55,8 @@
 @code {
     protected override void OnInitialized()
     {
-        Window.SizeChanged += (sender, e) => StateHasChanged();
-        Window.LocationChanged += (sender, e) => StateHasChanged();
+        Window.SizeChanged += (sender, e) => InvokeAsync(StateHasChanged);
+        Window.LocationChanged += (sender, e) => InvokeAsync(StateHasChanged);
     }
 
     string iconFilename;

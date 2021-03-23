@@ -7,13 +7,13 @@ namespace WebWindows.Blazor
 {
     internal class DesktopSynchronizationContext : SynchronizationContext
     {
-        public static event EventHandler<Exception> UnhandledException;
+        public event EventHandler<Exception> UnhandledException;
 
         private readonly WorkQueue _work;
 
         public DesktopSynchronizationContext(CancellationToken cancellationToken)
         {
-            _work = new WorkQueue(cancellationToken);
+            _work = new WorkQueue(this, cancellationToken);
         }
 
         public override SynchronizationContext CreateCopy()
@@ -59,10 +59,12 @@ namespace WebWindows.Blazor
         private class WorkQueue
         {
             private readonly Thread _thread;
+            private readonly DesktopSynchronizationContext _desktopSynchronizationContext;
             private readonly CancellationToken _cancellationToken;
 
-            public WorkQueue(CancellationToken cancellationToken)
+            public WorkQueue(DesktopSynchronizationContext desktopSynchronizationContext, CancellationToken cancellationToken)
             {
+                _desktopSynchronizationContext = desktopSynchronizationContext;
                 _cancellationToken = cancellationToken;
                 _thread = new Thread(ProcessQueue);
                 _thread.Start();
@@ -120,7 +122,7 @@ namespace WebWindows.Blazor
                 }
                 catch (Exception e)
                 {
-                    UnhandledException?.Invoke(this, e);
+                    _desktopSynchronizationContext.UnhandledException?.Invoke(this, e);
                 }
             }
         }
