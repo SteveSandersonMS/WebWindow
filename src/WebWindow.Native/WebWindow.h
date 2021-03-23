@@ -65,7 +65,7 @@ public:
 	static void Register();
 #endif
 
-	WebWindow(AutoString title, WebWindow* parent, WebMessageReceivedCallback webMessageReceivedCallback);
+	WebWindow(AutoString title, WebWindow* parent, WebMessageReceivedCallback webMessageReceivedCallback, bool fullscreen, int x, int y, int width, int height);
 	~WebWindow();
 	void SetTitle(AutoString title);
 	void Show();

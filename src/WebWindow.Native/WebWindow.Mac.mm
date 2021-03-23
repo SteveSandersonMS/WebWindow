@@ -34,10 +34,10 @@ void WebWindow::Register()
     [application setDelegate:appDelegate];
 }
 
-WebWindow::WebWindow(AutoString title, WebWindow* parent, WebMessageReceivedCallback webMessageReceivedCallback)
+WebWindow::WebWindow(AutoString title, WebWindow* parent, WebMessageReceivedCallback webMessageReceivedCallback, bool fullscreen, int x, int y, int width, int height)
 {
     _webMessageReceivedCallback = webMessageReceivedCallback;
-    NSRect frame = NSMakeRect(0, 0, 900, 600);
+    NSRect frame = NSMakeRect(x, y, width, height);
     NSWindow *window = [[NSWindow alloc]
         initWithContentRect:frame
         styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable | NSWindowStyleMaskMiniaturizable

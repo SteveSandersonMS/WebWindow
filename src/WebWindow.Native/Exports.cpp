@@ -25,9 +25,9 @@ extern "C"
 	}
 #endif
 
-	EXPORTED WebWindow* WebWindow_ctor(AutoString title, WebWindow* parent, WebMessageReceivedCallback webMessageReceivedCallback)
+	EXPORTED WebWindow* WebWindow_ctor(AutoString title, WebWindow* parent, WebMessageReceivedCallback webMessageReceivedCallback, bool fullscreen, int x, int y, int width, int height)
 	{
-		return new WebWindow(title, parent, webMessageReceivedCallback);
+		return new WebWindow(title, parent, webMessageReceivedCallback, fullscreen, x, y, width, height);
 	}
 
 	EXPORTED void WebWindow_dtor(WebWindow* instance)
