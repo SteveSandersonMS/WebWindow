@@ -26,5 +26,12 @@ namespace WebWindows.Blazor
         {
             DesktopNavigationManager.Instance.SetLocation(uri, isInterceptedLink);
         }
+
+        [JSInvokable(nameof(OnRenderCompleted))]
+        public static async Task OnRenderCompleted(long renderId, string errorMessageOrNull)
+        {
+            var renderer = ComponentsDesktop.DesktopRenderer;
+            await renderer.OnRenderCompletedAsync(renderId, errorMessageOrNull);
+        }
     }
 }

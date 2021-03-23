@@ -1,17 +1,17 @@
 import '@dotnet/jsinterop/dist/Microsoft.JSInterop';
 import '@browserjs/GlobalExports';
-import { OutOfProcessRenderBatch } from '@browserjs/Rendering/RenderBatch/OutOfProcessRenderBatch';
 import { setEventDispatcher } from '@browserjs/Rendering/RendererEventDispatcher';
 import { internalFunctions as navigationManagerFunctions } from '@browserjs/Services/NavigationManager';
-import { renderBatch } from '@browserjs/Rendering/Renderer';
 import { decode } from 'base64-arraybuffer';
 import * as ipc from './IPC';
+import { RenderQueue } from './RenderQueue';
 
 function boot() {
   setEventDispatcher((eventDescriptor, eventArgs) => DotNet.invokeMethodAsync('WebWindow.Blazor', 'DispatchEvent', eventDescriptor, JSON.stringify(eventArgs)));
   navigationManagerFunctions.listenForNavigationEvents((uri: string, intercepted: boolean) => {
     return DotNet.invokeMethodAsync('WebWindow.Blazor', 'NotifyLocationChanged', uri, intercepted);
   });
+  const renderQueue = RenderQueue.getOrCreate();
 
   // Configure the mechanism for JS<->NET calls
   DotNet.attachDispatcher({
@@ -33,9 +33,9 @@ function boot() {
     DotNet.jsCallDispatcher.endInvokeDotNetFromJS(callId, success, resultOrError);
   });
 
-  ipc.on('JS.RenderBatch', (rendererId, batchBase64) => {
-    var batchData = new Uint8Array(decode(batchBase64));
-    renderBatch(rendererId, new OutOfProcessRenderBatch(batchData));
+  ipc.on('JS.RenderBatch', (batchId, batchBase64) => {
+      const batchData = new Uint8Array(decode(batchBase64));
+      renderQueue.processBatch(batchId, batchData);
   });
 
   ipc.on('JS.Error', (message) => {
