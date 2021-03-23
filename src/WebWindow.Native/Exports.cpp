@@ -134,4 +134,9 @@ extern "C"
 	{
 		instance->SetIconFile(filename);
 	}
+	
+	EXPORTED void WebWindow_SetUriChangeCallback(WebWindow* instance, UriChangeCallback callback)
+	{
+	    instance->SetUriChangeCallback(callback);
+	}
 }
