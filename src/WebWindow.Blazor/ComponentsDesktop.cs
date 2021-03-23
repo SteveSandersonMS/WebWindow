@@ -9,6 +9,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,7 +24,46 @@ namespace WebWindows.Blazor
         internal static DesktopRenderer DesktopRenderer { get; private set; }
         internal static WebWindow WebWindow { get; private set; }
 
+        public static void RunFromString<TStartup>(string windowTitle, string indexContent, string rootPath)
+        {
+            var contentRootAbsolute = Path.GetDirectoryName(Path.GetFullPath(rootPath));
+
+            RunFromResolver<TStartup>(windowTitle, DefaultBlazorResolver(contentRootAbsolute, (string url, out string contentType) =>
+            {
+                contentType = "text/html";
+                return new MemoryStream(Encoding.Default.GetBytes(indexContent));
+            }));
+        }
+
         public static void Run<TStartup>(string windowTitle, string hostHtmlPath)
+        {
+            var contentRootAbsolute = Path.GetDirectoryName(Path.GetFullPath(hostHtmlPath));
+
+            RunFromResolver<TStartup>(windowTitle, DefaultBlazorResolver(contentRootAbsolute, (string url, out string contentType) =>
+            {
+                contentType = GetContentType(hostHtmlPath);
+                return File.Exists(hostHtmlPath) ? File.OpenRead(hostHtmlPath) : null;
+            }));
+        }
+
+        private static ResolveWebResourceDelegate DefaultBlazorResolver(string contentRootAbsolute, ResolveWebResourceDelegate indexResolver)
+        {
+            return (string url, out string contentType) =>
+            {
+                // TODO: Only intercept for the hostname 'app' and passthrough for others
+                // TODO: Prevent directory traversal?
+                var appFile = Path.Combine(contentRootAbsolute, new Uri(url).AbsolutePath.Substring(1));
+                if (appFile == contentRootAbsolute)
+                {
+                    return indexResolver(url, out contentType);
+                }
+
+                contentType = GetContentType(appFile);
+                return File.Exists(appFile) ? File.OpenRead(appFile) : null;
+            };
+        }
+
+        public static void RunFromResolver<TStartup>(string windowTitle, ResolveWebResourceDelegate resolver)
         {
             DesktopSynchronizationContext.UnhandledException += (sender, exception) =>
             {
@@ -32,21 +72,7 @@ namespace WebWindows.Blazor
 
             WebWindow = new WebWindow(windowTitle, options =>
             {
-                var contentRootAbsolute = Path.GetDirectoryName(Path.GetFullPath(hostHtmlPath));
-
-                options.SchemeHandlers.Add(BlazorAppScheme, (string url, out string contentType) =>
-                {
-                    // TODO: Only intercept for the hostname 'app' and passthrough for others
-                    // TODO: Prevent directory traversal?
-                    var appFile = Path.Combine(contentRootAbsolute, new Uri(url).AbsolutePath.Substring(1));
-                    if (appFile == contentRootAbsolute)
-                    {
-                        appFile = hostHtmlPath;
-                    }
-
-                    contentType = GetContentType(appFile);
-                    return File.Exists(appFile) ? File.OpenRead(appFile) : null;
-                });
+                options.SchemeHandlers.Add(BlazorAppScheme, resolver);
 
                 // framework:// is resolved as embedded resources
                 options.SchemeHandlers.Add("framework", (string url, out string contentType) =>
