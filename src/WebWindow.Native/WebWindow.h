@@ -7,7 +7,11 @@
 #include <map>
 #include <string>
 #include <wil/com.h>
-#include <WebView2.h>
+#include <windows.web.ui.h>
+#include <windows.web.ui.interop.h>
+#include <wrl.h>
+#include <wrl/wrappers/corewrappers.h>
+#include "WebView2.h"
 typedef const wchar_t* AutoString;
 #else
 #ifdef OS_LINUX
@@ -45,7 +49,13 @@ private:
 	wil::com_ptr<IWebView2Environment3> _webviewEnvironment;
 	wil::com_ptr<IWebView2WebView5> _webviewWindow;
 	std::map<std::wstring, WebResourceRequestedCallback> _schemeToRequestHandler;
+
+	Microsoft::WRL::ComPtr<ABI::Windows::Web::UI::IWebViewControl> m_webViewControl;
+	Microsoft::WRL::ComPtr<ABI::Windows::Web::UI::Interop::IWebViewControlProcess> m_process;
+	Microsoft::WRL::ComPtr<ABI::Windows::Web::UI::Interop::IWebViewControlProcessOptions> m_processOptions;
 	void AttachWebView();
+	bool AttachWebViewChromium();
+	bool AttachWebViewEdge();
 #elif OS_LINUX
 	GtkWidget* _window;
 	GtkWidget* _webview;

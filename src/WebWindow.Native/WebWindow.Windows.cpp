@@ -1,4 +1,13 @@
 #include "WebWindow.h"
+#define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
+#include <windows.h>
+
+#include <windows.web.ui.h>
+#include <windows.web.ui.interop.h>
+#include <windows.foundation.h>
+#include <windows.foundation.collections.h>
+#include <wrl.h>
+#include <wrl/wrappers/corewrappers.h>
 #include <stdio.h>
 #include <map>
 #include <mutex>
@@ -6,11 +15,18 @@
 #include <comdef.h>
 #include <atomic>
 #include <Shlwapi.h>
+#include "IAsyncOperationHelper.h"
+#include <strsafe.h>
 
 #define WM_USER_SHOWMESSAGE (WM_USER + 0x0001)
 #define WM_USER_INVOKE (WM_USER + 0x0002)
 
+using namespace ABI::Windows::Foundation;
+using namespace ABI::Windows::Storage::Streams;
+using namespace ABI::Windows::Web::UI;
+using namespace ABI::Windows::Web::UI::Interop;
 using namespace Microsoft::WRL;
+using namespace Microsoft::WRL::Wrappers;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 LPCWSTR CLASS_NAME = L"WebWindow";
@@ -31,6 +47,70 @@ struct ShowMessageParams
 	std::wstring body;
 	UINT type;
 };
+
+void CheckFailure(_In_ HRESULT hr)
+{
+	if (FAILED(hr))
+	{
+		WCHAR message[512] = L"";
+		StringCchPrintf(message, ARRAYSIZE(message), L"Error: 0x%x", hr);
+		MessageBoxW(nullptr, message, nullptr, MB_OK);
+		ExitProcess(-1);
+	}
+}
+
+template <typename TInterface>
+Microsoft::WRL::ComPtr<TInterface> GetActivationFactoryFailFast(_In_z_ PCWSTR factoryClassName)
+{
+	ComPtr<TInterface> factoryInstance;
+	CheckFailure(RoGetActivationFactory(
+		HStringReference(factoryClassName).Get(),
+		IID_PPV_ARGS(&factoryInstance)));
+	return factoryInstance;
+}
+
+template <typename TInterface>
+Microsoft::WRL::ComPtr<TInterface> ActivateInstanceFailFast(_In_z_ PCWSTR className)
+{
+	ComPtr<TInterface> classInstanceAsInspectable;
+	ComPtr<TInterface> classInstance;
+	CheckFailure(RoActivateInstance(
+		HStringReference(className).Get(),
+		&classInstanceAsInspectable));
+	CheckFailure(classInstanceAsInspectable.As(&classInstance));
+	return classInstance;
+}
+
+ComPtr<IUriRuntimeClass> CreateWinRtUri(_In_z_ PCWSTR uri, _In_ bool allowInvalidUri = false)
+{
+	auto uriRuntimeClassFactory = GetActivationFactoryFailFast<IUriRuntimeClassFactory>(RuntimeClass_Windows_Foundation_Uri);
+	ComPtr<IUriRuntimeClass> uriRuntimeClass;
+	if (!allowInvalidUri)
+	{
+		CheckFailure(uriRuntimeClassFactory->CreateUri(HStringReference(uri).Get(), &uriRuntimeClass));
+	}
+	else
+	{
+		uriRuntimeClassFactory->CreateUri(HStringReference(uri).Get(), &uriRuntimeClass);
+	}
+	return uriRuntimeClass;
+}
+
+Rect HwndWindowRectToBoundsRect(_In_ HWND hwnd)
+{
+	RECT windowRect = { 0 };
+	GetWindowRect(hwnd, &windowRect);
+
+	Rect bounds =
+	{
+		0,
+		0,
+		static_cast<float>(windowRect.right - windowRect.left),
+		static_cast<float>(windowRect.bottom - windowRect.top)
+	};
+
+	return bounds;
+}
 
 void WebWindow::Register(HINSTANCE hInstance)
 {
@@ -121,6 +201,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			webWindow->GetSize(&width, &height);
 			webWindow->InvokeResized(width, height);
 		}
+		else {
+
+		}
 		return 0;
 	}
 	case WM_MOVE:
@@ -147,6 +230,22 @@ void WebWindow::RefitContent()
 		RECT bounds;
 		GetClientRect(_hWnd, &bounds);
 		_webviewWindow->put_Bounds(bounds);
+	}
+	else {
+		if (m_webViewControl)
+		{
+			RECT hwndBounds = { 0 };
+			GetClientRect(_hWnd, &hwndBounds);
+			const int clientWidth = hwndBounds.right - hwndBounds.left;
+			const int clientHeight = hwndBounds.bottom - hwndBounds.top;
+
+			SetWindowPos(_hWnd, nullptr, 0, 0, clientWidth, clientHeight - 0, SWP_NOZORDER);
+
+			Rect bounds = HwndWindowRectToBoundsRect(_hWnd);
+			ComPtr<IWebViewControlSite> site;
+			CheckFailure(m_webViewControl.As(&site));
+			CheckFailure(site->put_Bounds(bounds));
+		}
 	}
 }
 
@@ -201,7 +300,7 @@ void WebWindow::Invoke(ACTION callback)
 	waitInfo.completionNotifier.wait(uLock, [&] { return waitInfo.isCompleted; });
 }
 
-void WebWindow::AttachWebView()
+bool WebWindow::AttachWebViewChromium()
 {
 	std::atomic_flag flag = ATOMIC_FLAG_INIT;
 	flag.test_and_set();
@@ -291,26 +390,93 @@ void WebWindow::AttachWebView()
 
 	if (envResult != S_OK)
 	{
-		_com_error err(envResult);
-		LPCTSTR errMsg = err.ErrorMessage();
-		MessageBox(_hWnd, errMsg, L"Error instantiating webview", MB_OK);
+		return false;
 	}
-	else
+
+	// Block until it's ready. This simplifies things for the caller, so they
+	// don't need to regard this process as async.
+	MSG msg = { };
+	while (flag.test_and_set() && GetMessage(&msg, NULL, 0, 0))
 	{
-		// Block until it's ready. This simplifies things for the caller, so they
-		// don't need to regard this process as async.
-		MSG msg = { };
-		while (flag.test_and_set() && GetMessage(&msg, NULL, 0, 0))
-		{
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-		}
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
 	}
+
+	return true;
+}
+
+bool WebWindow::AttachWebViewEdge()
+{
+	// winrt::init_apartment(winrt::apartment_type::single_threaded);
+	HRESULT envResult = RoInitialize(RO_INIT_SINGLETHREADED);
+
+	// Use default options if options weren't set on the App during App::RunNewInstance
+	if (!m_processOptions)
+	{
+		m_processOptions = ActivateInstanceFailFast<IWebViewControlProcessOptions>(RuntimeClass_Windows_Web_UI_Interop_WebViewControlProcessOptions);
+	}
+
+	// Use a default new process if one wasn't set on the App during App::RunNewInstance
+	if (!m_process)
+	{
+		ComPtr<IWebViewControlProcessFactory> webViewControlProcessFactory = GetActivationFactoryFailFast<IWebViewControlProcessFactory>(RuntimeClass_Windows_Web_UI_Interop_WebViewControlProcess);
+		CheckFailure(webViewControlProcessFactory->CreateWithOptions(m_processOptions.Get(), &m_process));
+	}
+
+	ComPtr<IAsyncOperation<WebViewControl*>> createWebViewAsyncOperation;
+	CheckFailure(m_process->CreateWebViewControlAsync(
+		reinterpret_cast<INT64>(_hWnd),
+		HwndWindowRectToBoundsRect(_hWnd),
+		&createWebViewAsyncOperation));
+
+	CheckFailure(AsyncOpHelpers::WaitForCompletionAndGetResults(createWebViewAsyncOperation.Get(), m_webViewControl.ReleaseAndGetAddressOf()));
+
+	EventRegistrationToken token = { 0 };
+	HRESULT hr = m_webViewControl->add_ContentLoading(Callback<ITypedEventHandler<IWebViewControl*, WebViewControlContentLoadingEventArgs*>>(
+		[this](IWebViewControl* webViewControl, IWebViewControlContentLoadingEventArgs* args) -> HRESULT
+		{
+			ComPtr<IUriRuntimeClass> uri;
+			CheckFailure(args->get_Uri(&uri));
+			HString uriAsHString;
+			CheckFailure(uri->get_AbsoluteUri(uriAsHString.ReleaseAndGetAddressOf()));
+			//SetWindowText(m_addressbarWindow, uriAsHString.GetRawBuffer(nullptr));
+			return S_OK;
+		}).Get(), &token);
+	CheckFailure(hr);
+
+	//_com_error err(envResult);
+	//LPCTSTR errMsg = err.ErrorMessage();
+	//MessageBox(_hWnd, errMsg, L"Error instantiating webview", MB_OK);
+
+	return envResult == S_OK;
+}
+
+void WebWindow::AttachWebView()
+{
+	if (AttachWebViewChromium())
+	{
+		return;
+	}
+
+	// Fallback to Edge rendering.
+	AttachWebViewEdge();
 }
 
 void WebWindow::NavigateToUrl(AutoString url)
 {
-	_webviewWindow->Navigate(url);
+	if (_webviewWindow)
+	{
+		_webviewWindow->Navigate(url);
+	}
+	else
+	{
+		ComPtr<IUriRuntimeClass> uri = CreateWinRtUri(url, true);
+		if (uri != nullptr)
+		{
+			//m_webViewControl->Navigate(uri.Get());
+			CheckFailure(m_webViewControl->Navigate(uri.Get()));
+		}
+	}
 }
 
 void WebWindow::NavigateToString(AutoString content)
